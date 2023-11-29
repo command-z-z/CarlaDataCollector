@@ -1,0 +1,38 @@
+task: KITTI-3D
+exp_name: 'base'
+MAP: 'Town_10'
+
+carla_config:
+    num_of_vehicles: 50
+    num_of_walkers: 20
+
+agent_config:
+    transform: {location: [70, 13, 0.5], rotation: [0, 180, 0]}
+    blueprint: vehicle.lincoln.*
+
+sensor_config:
+    rgb:
+        transform: {location: [0, 0, 1.6], rotation: [0, 0, 0]}
+        blueprint: sensor.camera.rgb
+        attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
+
+    depth_rgb:
+        transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
+        blueprint: sensor.camera.depth
+        attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
+
+    lidar:
+        transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
+        blueprint: sensor.lidar.ray_cast
+        attribute: {range: 70, rotation_frequency: 20, lower_fov: -45, points_per_second: 1280000, channels: 64}
+
+filter_config:
+    preliminary_filter_distance: 50
+    max_render_depth_in_meters: 50
+    min_visible_vertices_for_render: 3
+    max_out_vertices_for_render: 5
+
+save_config:
+    root_path: data/test
+    step: 2
+    num_step: 100
