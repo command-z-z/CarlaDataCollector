@@ -1,7 +1,7 @@
 from lib.config import config_to_trans
 from lib.utils.export_utils import *
 
-class DataSave:
+class DataCollector:
     def __init__(self, cfg):
         self.cfg = cfg
         self.OUTPUT_FOLDER = None

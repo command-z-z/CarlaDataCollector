@@ -4,7 +4,7 @@ from lib.config import cfg
 import numpy as np
 from numpy.linalg import inv
 
-from lib.modules import KittiDescriptor, CarlaDescriptor
+from lib.labels import KittiLabel, CarlaLabel
 from lib.utils.image_converter import depth_to_array, to_rgb_array
 import math
 # from visual_utils import draw_3d_bounding_box
@@ -89,7 +89,7 @@ def is_visible_by_bbox(agent, obj, rgb_image, depth_data, intrinsic, extrinsic):
             "{} {} {}".format(obj.get_angular_velocity().x, obj.get_angular_velocity().y, obj.get_angular_velocity().z)
         # draw_3d_bounding_box(rgb_image, vertices_pos2d)
 
-        kitti_data = KittiDescriptor()
+        kitti_data = KittiLabel()
         kitti_data.set_truncated(truncated)
         kitti_data.set_occlusion(occluded)
         kitti_data.set_bbox(bbox_2d)
@@ -98,7 +98,7 @@ def is_visible_by_bbox(agent, obj, rgb_image, depth_data, intrinsic, extrinsic):
         kitti_data.set_3d_object_location(midpoint)
         kitti_data.set_rotation_y(rotation_y)
 
-        carla_data = CarlaDescriptor()
+        carla_data = CarlaLabel()
         carla_data.set_type(obj_tp)
         carla_data.set_velocity(velocity)
         carla_data.set_acceleration(acceleration)

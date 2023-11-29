@@ -1,32 +1,29 @@
-from lib.datasets import DataSave
-from lib.mode import SynchronyMode
+from lib.collectors import make_collector
+from lib.clients import make_client
 from lib.utils.data_utils import objects_filter
 from lib.config import cfg
 from tqdm import tqdm
 
 def main():
-    model = SynchronyMode(cfg)
-    dtsave = DataSave(cfg)
+    client = make_client(cfg)
+    collector = make_collector(cfg)
+
     try:
-        model.set_synchrony()
-        model.spawn_actors()
-        model.set_actors_route()
-        model.spawn_agent()
-        model.sensor_listen()
-        step = 0
-        STEP = cfg["save_config"]["step"]
-        NUM_STEP = cfg["save_config"]["num_step"]
-        for _ in tqdm(range(NUM_STEP)):
-            if step % STEP == 0:
-                data = model.tick()
+        client.set_synchrony()
+        client.spawn_npc()
+        client.set_npc_route()
+        client.spawn_ego_vehicle()
+        client.sensor_listen()
+        for frame in tqdm(range(cfg.save_frame_iter * cfg.all_frame_iter)):
+            if frame % cfg.save_frame_iter == 0:
+                data = client.tick()
                 data = objects_filter(data)
-                dtsave.save_training_files(data)
+                collector.save_training_files(data)
             else:
-                model.world.tick()
-            step+=1
+                client.world.tick()
 
     finally:
-        model.setting_recover()
+        client.setting_recover()
 
 
 if __name__ == '__main__':

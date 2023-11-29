@@ -8,12 +8,10 @@ import numpy as np
 from lib.config import config_to_trans
 from lib.utils.data_utils import camera_intrinsic, filter_by_distance
 
-sys.path.append("/opt/carla-simulator/PythonAPI/carla/dist/carla-0.9.12-py3.7-linux-x86_64.egg")
-
 import carla
 
 
-class SynchronyMode:
+class SynchronyClient:
     def __init__(self, cfg):
         self.cfg = cfg
         self.client = carla.Client('localhost', 2000)
@@ -30,7 +28,7 @@ class SynchronyMode:
         self.init_settings = self.world.get_settings()
         settings = self.world.get_settings()
         settings.synchronous_mode = True
-        settings.fixed_delta_seconds = 0.05
+        settings.fixed_delta_seconds = self.cfg.fixed_delta_seconds
         self.world.apply_settings(settings)
 
     def setting_recover(self):
@@ -46,9 +44,9 @@ class SynchronyMode:
             batch.append(carla.command.DestroyActor(walker_id))
         self.client.apply_batch_sync(batch)
 
-    def spawn_actors(self):
-        num_of_vehicles = self.cfg["carla_config"]["num_of_vehicles"]
-        num_of_walkers = self.cfg["carla_config"]["num_of_walkers"]
+    def spawn_npc(self):
+        num_of_vehicles = self.cfg.carla.num_of_vehicles
+        num_of_walkers = self.cfg.carla.num_of_walkers
 
         # 生成车辆actors
         blueprints = self.world.get_blueprint_library().filter("vehicle.*")
@@ -72,10 +70,6 @@ class SynchronyMode:
             if blueprint.has_attribute('color'):
                 color = random.choice(blueprint.get_attribute('color').recommended_values)
                 blueprint.set_attribute('color', color)
-            if blueprint.has_attribute('driver_id'):
-                driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
-                blueprint.set_attribute('driver_id', driver_id)
-            blueprint.set_attribute('role_name', 'autopilot')
             batch.append(carla.command.SpawnActor(blueprint, transform))
 
             for response in self.client.apply_batch_sync(batch):
@@ -110,7 +104,7 @@ class SynchronyMode:
                                                         len(self.actors["walkers"])))
         self.world.tick()
 
-    def set_actors_route(self):
+    def set_npc_route(self):
         self.traffic_manager.set_global_distance_to_leading_vehicle(1.0)
         self.traffic_manager.set_synchronous_mode(True)
         vehicle_actors = self.world.get_actors(self.actors["non_agents"])
@@ -139,7 +133,7 @@ class SynchronyMode:
             # max speed
             self.world.get_actor(con_id).set_max_speed(10)
 
-    def spawn_agent(self):
+    def spawn_ego_vehicle(self):
         vehicle_bp = random.choice(self.world.get_blueprint_library().filter(self.cfg["agent_config"]["blueprint"]))
         trans_cfg = self.cfg["agent_config"]["transform"]
         transform = config_to_trans(trans_cfg)
