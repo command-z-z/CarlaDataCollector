@@ -1,24 +1,24 @@
-from lib.config import config_to_trans
+from lib.utils.data_utils import config_to_trans
 from lib.utils.export_utils import *
 
 class DataCollector:
     def __init__(self, cfg):
         self.cfg = cfg
-        self.OUTPUT_FOLDER = None
-        self.LIDAR_PATH = None
-        self.KITTI_LABEL_PATH = None
-        self.CARLA_LABEL_PATH = None
-        self.IMAGE_PATH = None
-        self.CALIBRATION_PATH = None
-        self._generate_path(self.cfg["save_config"]["root_path"])
+        self.OUTPUT_FOLDER = ""
+        self.LIDAR_PATH = ""
+        self.KITTI_LABEL_PATH = ""
+        self.CARLA_LABEL_PATH = ""
+        self.IMAGE_PATH = ""
+        self.DEPTH_PATH = ""
+        self.CALIBRATION_PATH = ""
+        self._generate_path(self.cfg.result_dir)
         self.captured_frame_no = self._current_captured_frame_num()
 
 
     def _generate_path(self,root_path):
         """ 生成数据存储的路径"""
-        PHASE = "training"
-        self.OUTPUT_FOLDER = os.path.join(root_path, PHASE)
-        folders = ['calib', 'image', 'kitti_label', 'carla_label', 'velodyne']
+        self.OUTPUT_FOLDER = root_path
+        folders = ['calib', 'image', 'kitti_label', 'carla_label', 'velodyne', 'depth']
 
         for folder in folders:
             directory = os.path.join(self.OUTPUT_FOLDER, folder)
@@ -29,6 +29,7 @@ class DataCollector:
         self.KITTI_LABEL_PATH = os.path.join(self.OUTPUT_FOLDER, 'kitti_label/{0:06}.txt')
         self.CARLA_LABEL_PATH = os.path.join(self.OUTPUT_FOLDER, 'carla_label/{0:06}.txt')
         self.IMAGE_PATH = os.path.join(self.OUTPUT_FOLDER, 'image/{0:06}.png')
+        self.DEPTH_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth/{0:06}.png')
         self.CALIBRATION_PATH = os.path.join(self.OUTPUT_FOLDER, 'calib/{0:06}.txt')
 
 
@@ -57,17 +58,19 @@ class DataCollector:
         kitti_label_fname = self.KITTI_LABEL_PATH.format(self.captured_frame_no)
         carla_label_fname = self.CARLA_LABEL_PATH.format(self.captured_frame_no)
         img_fname = self.IMAGE_PATH.format(self.captured_frame_no)
-        calib_filename = self.CALIBRATION_PATH.format(self.captured_frame_no)
+        calib_fname = self.CALIBRATION_PATH.format(self.captured_frame_no)
+        depth_fname = self.DEPTH_PATH.format(self.captured_frame_no)
 
-        for agent, dt in data["agents_data"].items():
+        for _, dt in data["sensors_data"].items():
 
-            camera_transform= config_to_trans(self.cfg["sensor_config"]["rgb"]["transform"])
-            lidar_transform = config_to_trans(self.cfg["sensor_config"]["lidar"]["transform"])
+            camera_transform= config_to_trans(self.cfg.sensors.rgb.transform)
+            lidar_transform = config_to_trans(self.cfg.sensors.lidar.transform)
 
             save_ref_files(self.OUTPUT_FOLDER, self.captured_frame_no)
             save_image_data(img_fname, dt["sensor_data"][0])
             save_label_data(kitti_label_fname, dt["kitti_datapoints"])
             save_label_data(carla_label_fname, dt['carla_datapoints'])
-            save_calibration_matrices([camera_transform, lidar_transform], calib_filename, dt["intrinsic"])
+            save_calibration_matrices([camera_transform, lidar_transform], calib_fname, dt["intrinsic"])
+            save_depth_data(depth_fname, dt["sensor_data"][1])
             save_lidar_data(lidar_fname, dt["sensor_data"][2])
         self.captured_frame_no += 1

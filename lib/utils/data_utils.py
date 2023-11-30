@@ -16,16 +16,16 @@ import carla
 MAX_RENDER_DEPTH_IN_METERS = cfg["filter_config"]["max_render_depth_in_meters"]
 MIN_VISIBLE_VERTICES_FOR_RENDER = cfg["filter_config"]["min_visible_vertices_for_render"]
 MAX_OUT_VERTICES_FOR_RENDER = cfg["filter_config"]["max_out_vertices_for_render"]
-WINDOW_WIDTH = cfg["sensor_config"]["depth_rgb"]["attribute"]["image_size_x"]
-WINDOW_HEIGHT = cfg["sensor_config"]["depth_rgb"]["attribute"]["image_size_y"]
+WINDOW_WIDTH = cfg["sensors"]["depth_rgb"]["attribute"]["image_size_x"]
+WINDOW_HEIGHT = cfg["sensors"]["depth_rgb"]["attribute"]["image_size_y"]
 
 
 def objects_filter(data):
     environment_objects = data["environment_objects"]
-    agents_data = data["agents_data"]
+    sensors_data = data["sensors_data"]
     actors = data["actors"]
     actors = [x for x in actors if x.type_id.find("vehicle") != -1 or x.type_id.find("walker") != -1]
-    for agent, dataDict in agents_data.items():
+    for agent, dataDict in sensors_data.items():
         intrinsic = dataDict["intrinsic"]
         extrinsic = dataDict["extrinsic"]
         sensors_data = dataDict["sensor_data"]
@@ -35,26 +35,26 @@ def objects_filter(data):
         image = rgb_image.copy()
         depth_data = sensors_data[1]
 
-        data["agents_data"][agent]["visible_environment_objects"] = []
+        data["sensors_data"][agent]["visible_environment_objects"] = []
         for obj in environment_objects:
             kitti_datapoint, carla_datapoint = is_visible_by_bbox(agent, obj, image, depth_data, intrinsic, extrinsic)
             if kitti_datapoint is not None:
-                data["agents_data"][agent]["visible_environment_objects"].append(obj)
+                data["sensors_data"][agent]["visible_environment_objects"].append(obj)
                 kitti_datapoints.append(kitti_datapoint)
                 carla_datapoints.append(carla_datapoint)
 
-        data["agents_data"][agent]["visible_actors"] = []
+        data["sensors_data"][agent]["visible_actors"] = []
 
         for act in actors:
             kitti_datapoint, carla_datapoint = is_visible_by_bbox(agent, act, image, depth_data, intrinsic, extrinsic)
             if kitti_datapoint is not None:
-                data["agents_data"][agent]["visible_actors"].append(act)
+                data["sensors_data"][agent]["visible_actors"].append(act)
                 kitti_datapoints.append(kitti_datapoint)
                 carla_datapoints.append(carla_datapoint)
 
-        data["agents_data"][agent]["rgb_image"] = image
-        data["agents_data"][agent]["kitti_datapoints"] = kitti_datapoints
-        data["agents_data"][agent]["carla_datapoints"] = carla_datapoints
+        data["sensors_data"][agent]["rgb_image"] = image
+        data["sensors_data"][agent]["kitti_datapoints"] = kitti_datapoints
+        data["sensors_data"][agent]["carla_datapoints"] = carla_datapoints
     return data
 
 
@@ -110,9 +110,9 @@ def obj_type(obj):
     if isinstance(obj, carla.EnvironmentObject):
         return obj.type
     else:
-        if obj.type_id.find('walker') is not -1:
+        if obj.type_id.find('walker') != -1:
             return 'Pedestrian'
-        if obj.type_id.find('vehicle') is not -1:
+        if obj.type_id.find('vehicle') != -1:
             return 'Car'
         return None
 
@@ -281,7 +281,7 @@ def proj_to_2d(camera_pos_vector, intrinsic_mat):
 def filter_by_distance(data_dict, dis):
     environment_objects = data_dict["environment_objects"]
     actors = data_dict["actors"]
-    for agent,_ in data_dict["agents_data"].items():
+    for agent,_ in data_dict["sensors_data"].items():
         data_dict["environment_objects"] = [obj for obj in environment_objects if
                                             distance_between_locations(obj.transform.location, agent.get_location())
                                             <dis]
@@ -303,3 +303,13 @@ def calc_projected_2d_bbox(vertices_pos2d):
 
 def degrees_to_radians(degrees):
     return degrees * math.pi / 180
+
+def config_to_trans(trans_config):
+    transform = carla.Transform(carla.Location(trans_config["location"][0],
+                                               trans_config["location"][1],
+                                               trans_config["location"][2]),
+                                carla.Rotation(trans_config["rotation"][0],
+                                               trans_config["rotation"][1],
+                                               trans_config["rotation"][2]))
+    return transform
+

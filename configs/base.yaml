@@ -1,20 +1,19 @@
 task: KITTI
 exp_name: '3d-object'
-map: 'Town_10'
+map: 'Town_10HD_opt'
 
 collector_module: lib.collectors.KITTI3D
 client_module: lib.clients.KITTI3D
 
 carla:
+    fixed_delta_seconds: 0.05
     num_of_vehicles: 10 
     num_of_walkers: 20
-    fixed_delta_seconds: 0.05
 
 ego_vehicle:
-    transform: {location: [70, 13, 0.5], rotation: [0, 180, 0]}
     blueprint: vehicle.lincoln.*
 
-sensor:
+sensors:
     rgb:
         transform: {location: [0, 0, 1.6], rotation: [0, 0, 0]}
         blueprint: sensor.camera.rgb

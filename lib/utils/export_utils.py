@@ -23,6 +23,10 @@ def save_image_data(filename, image):
     logging.info("Wrote image data to %s", filename)
     image.save_to_disk(filename)
 
+def save_depth_data(filename, image):
+    logging.info("Wrote image data to %s", filename)
+    image.save_to_disk(filename)
+
 def save_bbox_image_data(filename, image):
     im = Image.fromarray(image)
     im.save(filename)
