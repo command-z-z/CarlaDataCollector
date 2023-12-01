@@ -23,11 +23,7 @@ class SynchronyClient:
         self.frame = None
         self.actors = {"npc_vehicles": [], "npc_walkers": [], "ego_vehicle": [], "sensors": {}}
         self.data = {"sensor_data": {}, "environment_data": None}  # 记录每一帧的数据
-        self._wait_car_drop_off()
 
-    def _wait_car_drop_off(self):
-        start = self.world.get_snapshot().timestamp.elapsed_seconds
-        while self.world.get_snapshot().timestamp.elapsed_seconds-start < 0.5: self.world.tick()
 
 
     def set_synchrony(self):
