@@ -22,9 +22,7 @@ class BasicSynchronyClient:
         self.init_settings = None
         self.frame = None
         self.actors = {"npc_vehicles": [], "npc_walkers": [], "ego_vehicle": [], "sensors": {}}
-        self.data = {"sensor_data": {}, "environment_data": None}  # 记录每一帧的数据
-
-
+        self.data = {"sensor_data": {}}
 
     def set_synchrony(self):
         self.init_settings = self.world.get_settings()

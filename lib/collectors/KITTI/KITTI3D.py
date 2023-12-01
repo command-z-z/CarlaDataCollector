@@ -18,7 +18,6 @@ class DataCollector(BasicDataCollector):
 
 
     def _generate_path(self,root_path):
-        """ 生成数据存储的路径"""
         self.OUTPUT_FOLDER = root_path
         folders = ['calib', 'image', 'kitti_label', 'carla_label', 'velodyne', 'depth']
 
@@ -36,11 +35,9 @@ class DataCollector(BasicDataCollector):
 
 
     def _current_captured_frame_num(self):
-        """获取文件夹中存在的数据量"""
         label_path = os.path.join(self.OUTPUT_FOLDER, 'kitti_label/')
         num_existing_data_files = len(
             [name for name in os.listdir(label_path) if name.endswith('.txt')])
-        print("当前存在{}个数据".format(num_existing_data_files))
         if num_existing_data_files == 0:
             return 0
         answer = input(
