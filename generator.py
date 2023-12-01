@@ -13,12 +13,6 @@ def main():
         client.set_npc_route()
         client.spawn_ego_vehicle()
         client.sensor_listen()
-        # for frame in tqdm(range(cfg.save_frame_iter * cfg.all_frame_iter)):
-        #     if frame % cfg.save_frame_iter == 0:
-        #         data = client.tick()
-        #         collector.save_training_files(data)
-        #     else:
-        #         client.world.tick()
         for _ in tqdm(range(cfg.all_frame_iter)):
             data = client.tick()
             collector.save_training_files(data)
