@@ -1,10 +1,10 @@
-parent_cfg: 'configs/base.yaml'
+parent_cfg: 'configs/basic.yaml'
 task: KITTI
 exp_name: '3d-object'
 map: 'Town01_Opt'
 
-data_module: lib.collectors.KITTI3D
-model_module: lib.clients.KITTI3D
+collector_module: lib.collectors.KITTI.KITTI3D
+client_module: lib.clients.KITTI.KITTI3D
 
 carla:
     weather: WetNoon

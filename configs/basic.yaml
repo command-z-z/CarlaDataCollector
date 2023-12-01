@@ -2,8 +2,8 @@ task: KITTI
 exp_name: '3d-object'
 map: 'Town_10HD_opt'
 
-collector_module: lib.collectors.KITTI3D
-client_module: lib.clients.KITTI3D
+collector_module: lib.collectors.Basic
+client_module: lib.clients.Basic
 
 carla:
     fixed_delta_seconds: 0.05
@@ -30,4 +30,3 @@ sensors:
         attribute: {range: 70, rotation_frequency: 20, lower_fov: -45, points_per_second: 1280000, channels: 64}
 
 all_frame_iter: 100
-save_frame_iter: 2

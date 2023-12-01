@@ -1,7 +1,7 @@
 from lib.utils.data_utils import config_to_trans
 from lib.utils.export_utils import *
 
-class DataCollector:
+class BasicDataCollector:
     def __init__(self, cfg):
         self.cfg = cfg
         self.OUTPUT_FOLDER = ""

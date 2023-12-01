@@ -19,14 +19,14 @@
     </a>
 </div>
 
-> :eyes: This project is still under **development**. I'm not an experienced carla developer. You are welcome to submit your **PR** to contribute to the community. See how to [contirbute](#-contributing).
+> :eyes: This project is still under **development**(Beta version). I'm not an experienced carla developer. You are welcome to submit your [**PR**](https://github.com/command-z-z/CarlaDataCollector/pulls) to contribute to the community. See how to [contirbute](#-contributing).
 
 CarlaDataCollector is a powerful tool with lightweight and clear structural designed to help users efficiently collect data in the Carla simulation environment. The framework not only provides various data collection functions but also supports exporting data to various formats to meet the diverse needs of users. With its intuitive visualization features, users can easily monitor and analyze the collected data, providing strong support for further research and experimentation.
 
 
 | RGB | DEPTH |
 | :-:   | :-:   |
-| [](./assets/rgb.png) | [](./assets/depth.png) |
+| ![](./assets/rgb.png) | ![](./assets/depth.png) |
 
 
 ## ✨ Features
@@ -47,11 +47,17 @@ CarlaDataCollector is a powerful tool with lightweight and clear structural desi
 - [CARLA](https://carla.org/) >= [0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15)
 
 ## :art: Example
-Generate simulation data set in KITTI 2D/3D target detection data set format based on CARLA Simulator(Reference from [Repo](https://github.com/mmmmaomao/DataGenerator)).
+<details>
+<summary><b>KITTI-3D-object</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
 
+Generate simulation data set in KITTI 2D/3D target detection data set format based on CARLA Simulator(Reference from [Repo](https://github.com/mmmmaomao/DataGenerator)).
 ```
 python generator.py --cfg_file ./configs/kitti/3d-object.yaml
 ```
+
+![image](https://user-images.githubusercontent.com/55339200/138204888-18958f52-ab1a-454a-8eef-23b7d4987f37.png)
+
+</details>
 
 ## 🚀 Usage
 
@@ -61,33 +67,18 @@ python generator.py --cfg_file ./configs/kitti/3d-object.yaml
 git clone https://github.com/command-z-z/CARLA-KITTI.git
 ```
 
-2. Create client and collector customized for your own tasks:
+2. Write your [config file](#-configuration) and provide the data required for data collection (e.g. sensors, ego_vehicle etc)
+
+3. Create client and collector customized for your own tasks:
 
 <details>
 <summary><b>More Packages</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
 
 </details>
 
-```
-44
-```
-
-3. Write your [config file](#-configuration) and provide the data required for data collection (e.g. sensors, ego_vehicle etc)
-
-
-
 ## ⚙️ Configuration
 
-> ❗️ Set the configuration **BEFORE** loading the color scheme with `colorscheme tokyonight`.
-
-The theme offers four styles: [storm](#storm), [moon](#moon), [night](#night),
-and [day](#day).
-
-The [day](#day) style is used when `{ style = "day" }` is passed to
-`setup(options)` or when `vim.o.background = "light"`.
-
-[TokyoNight](https://github.com/folke/tokyonight.nvim) uses the default options,
-unless `setup` is explicitly called.
+You can inherit this [basic.yaml](https://github.com/command-z-z/CarlaDataCollector/blob/main/configs/basic.yaml) by `parent_cfg` parameter and then add or modify some parameters you want.The basic configuration file is as follows:
 
 ```yaml
 # Task type is KITTI
@@ -98,9 +89,9 @@ exp_name: '3d-object'
 map: 'Town_10HD_opt'
 
 # Collector module 
-collector_module: lib.collectors.KITTI3D
+collector_module: lib.collectors.Basic
 # Client module
-client_module: lib.clients.KITTI3D
+client_module: lib.clients.Basic
 
 # Carla configuration
 carla:
@@ -147,30 +138,24 @@ sensors:
 
 # Iteration parameters configuration
 all_frame_iter: 100
-save_frame_iter: 2
 ```
 
 ## 🔥 Contributing
 
 Pull requests are welcome.
 
-For the [extras](#-extras), we use a simple template system that can be used to
-generate themes for the different styles.
+How to add a new example for CarlaDataCollector:
 
-How to add a new extra template:
+1. Create a file like `configs/basic.yaml` for specific task configuration.
 
-1. Create a file like `lua/tokyonight/extra/cool-app.lua`.
-2. Add the name and output file extension to the `extras` table in
-   `lua/tokyonight/extra/init.lua`.
-3. Run the following command to generate new [extra](#-extras) themes from the tokyonight plugin directory:
+2. Create a customized client file in `lib/clients/` folder.
 
-   ```sh
-   nvim --headless "+lua require('tokyonight.extra').setup()" +qa
-   ```
+3. Create a customized collector file in `lib/collectors/` folder.
 
-4. Check the newly created themes in the `extra/` directory. Please **DO NOT**
-   commit them, as they are already automatically built by the CI.
+4. Add the extension data process or visualization function in `lib/utils/` folder.
 
-## ©️  Citation
+5. Add a description to the [example](#-example) section of the `README.md` to let users know how to use it.
 
-If you use our work in your research project, please consider citing:
+## 🍺 Contact
+
+For CarlaDataCollector bug reports and feature requests please visit [GitHub Issues](https://github.com/command-z-z/command-z-z/issues), and join our [Discord](https://discord.gg/2QGjgzgM) community for questions and discussions!

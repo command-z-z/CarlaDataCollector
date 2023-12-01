@@ -9,7 +9,7 @@ import carla
 from loguru import logger
 
 
-class SynchronyClient:
+class BasicSynchronyClient:
     def __init__(self, cfg):
         self.cfg = cfg
         self.client = carla.Client('localhost', 2000)

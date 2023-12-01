@@ -8,6 +8,7 @@ from PIL import Image
 import os
 import logging
 import math
+from .image_utils import depth_to_array
 
 
 def save_ref_files(OUTPUT_FOLDER, id):
