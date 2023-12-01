@@ -104,7 +104,7 @@ class SynchronyClient(BasicSynchronyClient):
 <details>
 <summary><b>Customized DataCollector</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
 
-Inherit the function from `BasicSynchronyClient` and overload the `tick` function according to your own data collection requirements.
+Inherit the function from `BasicDataCollector` and overload the function according to your own data collection requirements.
 
 ```python
 class DataCollector(BasicDataCollector):
@@ -184,7 +184,7 @@ class DataCollector(BasicDataCollector):
 
 3. Write your [config file](#-configuration) and provide the data required for data collection (e.g. sensors, ego_vehicle etc)
 
-## 🪓 Configurationn
+## 🪓 Configuration
 
 You can inherit this [basic.yaml](https://github.com/command-z-z/CarlaDataCollector/blob/main/configs/basic.yaml) by `parent_cfg` parameter and then add or modify some parameters you want.The basic configuration file is as follows:
 
@@ -262,7 +262,7 @@ How to add a new example for CarlaDataCollector:
 
 4. Add the extension data process or visualization function in `lib/utils/` folder.
 
-5. Add a description to the [example](#-example) section of the `README.md` to let users know how to use it.
+5. Add a description to the [Example](#-example) section of the `README.md` to let users know more about it.
 
 ## 🍺 Contact
 

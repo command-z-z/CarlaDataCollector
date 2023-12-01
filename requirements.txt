@@ -1,0 +1,6 @@
+pyyaml
+carla
+numpy
+Pillow
+loguru
+tqdm

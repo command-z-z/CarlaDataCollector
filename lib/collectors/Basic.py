@@ -3,16 +3,7 @@ from lib.utils.export_utils import *
 
 class BasicDataCollector:
     def __init__(self, cfg):
-        self.cfg = cfg
-        self.OUTPUT_FOLDER = ""
-        self.LIDAR_PATH = ""
-        self.KITTI_LABEL_PATH = ""
-        self.CARLA_LABEL_PATH = ""
-        self.IMAGE_PATH = ""
-        self.DEPTH_PATH = ""
-        self.CALIBRATION_PATH = ""
-        self._generate_path(self.cfg.result_dir)
-        self.captured_frame_no = self._current_captured_frame_num()
+        pass
 
 
     def _generate_path(self,root_path):
