@@ -1,7 +1,7 @@
 parent_cfg: 'configs/base.yaml'
 task: KITTI
 exp_name: '3d-object'
-map: 'Town03'
+map: 'Town01_Opt'
 
 data_module: lib.collectors.KITTI3D
 model_module: lib.clients.KITTI3D
@@ -9,7 +9,7 @@ model_module: lib.clients.KITTI3D
 carla:
     weather: WetNoon
     fixed_delta_seconds: 0.05
-    num_of_npc_vehicles: 10
+    num_of_npc_vehicles: 50
     num_of_npc_walkers: 20
 
 ego_vehicle:
@@ -24,7 +24,7 @@ sensors:
     depth_rgb:
         transform: { location: [ 1, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
         blueprint: sensor.camera.depth
-        attribute: { image_size_x: 920, image_size_y: 360, fov: 90 }
+        attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
 
     lidar:
         transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }

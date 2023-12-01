@@ -6,25 +6,32 @@
 
 <div align="center"><p>
     <a href="https://github.com/command-z-z/CarlaDataCollector/stargazers">
-      <img alt="Stars" src="https://img.shields.io/github/stars/LazyVim/LazyVim?style=for-the-badge&logo=starship&color=c69ff5&logoColor=D9E0EE&labelColor=302D41" />
+      <img alt="Stars" src="https://img.shields.io/github/stars/command-z-z/CarlaDataCollector?style=for-the-badge&logo=starship&color=c69ff5&logoColor=D9E0EE&labelColor=302D41" />
     </a>
     <a href="https://github.com/command-z-z/CarlaDataCollector/pulse">
-      <img alt="Last commit" src="https://img.shields.io/github/last-commit/LazyVim/LazyVim?style=for-the-badge&logo=starship&color=8bd5ca&logoColor=D9E0EE&labelColor=302D41"/>
+      <img alt="Last commit" src="https://img.shields.io/github/last-commit/command-z-z/CarlaDataCollector?style=for-the-badge&logo=starship&color=8bd5ca&logoColor=D9E0EE&labelColor=302D41"/>
     </a>
     <a href="https://github.com/command-z-z/CarlaDataCollector/blob/main/LICENSE">
-      <img alt="License" src="https://img.shields.io/github/license/LazyVim/LazyVim?style=for-the-badge&logo=starship&color=ee999f&logoColor=D9E0EE&labelColor=302D41" />
+      <img alt="License" src="https://img.shields.io/github/license/command-z-z/CarlaDataCollector?style=for-the-badge&logo=starship&color=ee999f&logoColor=D9E0EE&labelColor=302D41" />
     </a>
     <a href="https://github.com/command-z-z/CarlaDataCollector/issues">
-      <img alt="Issues" src="https://img.shields.io/github/issues/LazyVim/LazyVim?style=for-the-badge&logo=bilibili&color=F5E0DC&logoColor=D9E0EE&labelColor=302D41" />
+      <img alt="Issues" src="https://img.shields.io/github/issues/command-z-z/CarlaDataCollector?style=for-the-badge&logo=bilibili&color=F5E0DC&logoColor=D9E0EE&labelColor=302D41" />
     </a>
 </div>
 
-> :eyes: This project is still under **development**. I'm not an experienced carla developer. You are welcome to submit your **PR** to contribute to the community. See how to [contirbute]().
+> :eyes: This project is still under **development**. I'm not an experienced carla developer. You are welcome to submit your **PR** to contribute to the community. See how to [contirbute](#-contributing).
 
-CarlaDataCollector is a lightweight framework for efficient data collection in Carla simulation environment and export it to a any data format.
+CarlaDataCollector is a powerful tool with lightweight and clear structural designed to help users efficiently collect data in the Carla simulation environment. The framework not only provides various data collection functions but also supports exporting data to various formats to meet the diverse needs of users. With its intuitive visualization features, users can easily monitor and analyze the collected data, providing strong support for further research and experimentation.
+
+
+| RGB | DEPTH |
+| :-:   | :-:   |
+| [](./assets/rgb.png) | [](./assets/depth.png) |
+
+
 ## ✨ Features
 - :golf: the latest CARLA 0.9.15 features.
-- :key: Easily config and run your code to collect data 
+- :key: Easily config and run your code to collect data.
 - :label: Labels pre-available in multiple formats.
 - :tulip: Reasonable interactions and prompts.
 - :gem: Provides a variety of data processing functions.
@@ -39,8 +46,8 @@ CarlaDataCollector is a lightweight framework for efficient data collection in C
 
 - [CARLA](https://carla.org/) >= [0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15)
 
-## :star: Example
-Generate simulation data set in KITTI 2D/3D target detection data set format based on CARLA Simulator(from [Repo](https://github.com/mmmmaomao/DataGenerator)).
+## :art: Example
+Generate simulation data set in KITTI 2D/3D target detection data set format based on CARLA Simulator(Reference from [Repo](https://github.com/mmmmaomao/DataGenerator)).
 
 ```
 python generator.py --cfg_file ./configs/kitti/3d-object.yaml
@@ -54,13 +61,18 @@ python generator.py --cfg_file ./configs/kitti/3d-object.yaml
 git clone https://github.com/command-z-z/CARLA-KITTI.git
 ```
 
-2. Create clients and collectors customized for your own tasks:
+2. Create client and collector customized for your own tasks:
+
+<details>
+<summary><b>More Packages</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
+
+</details>
 
 ```
 44
 ```
 
-3. Write your [config file]() and provide the data required for data collection (e.g. sensor data)
+3. Write your [config file](#-configuration) and provide the data required for data collection (e.g. sensors, ego_vehicle etc)
 
 
 
@@ -78,37 +90,62 @@ The [day](#day) style is used when `{ style = "day" }` is passed to
 unless `setup` is explicitly called.
 
 ```yaml
+# Task type is KITTI
 task: KITTI
+# Experiment name is '3d-object'
 exp_name: '3d-object'
+# Using map Town_10HD_opt
 map: 'Town_10HD_opt'
 
+# Collector module 
 collector_module: lib.collectors.KITTI3D
+# Client module
 client_module: lib.clients.KITTI3D
 
+# Carla configuration
 carla:
+    # Fixed time step is 0.05 seconds for sync
     fixed_delta_seconds: 0.05
+    # Number of npc vehicles 
     num_of_vehicles: 10 
+    # Number of npc walkers
     num_of_walkers: 20
 
+# Ego vehicle configuration
 ego_vehicle:
+    # Using witch type car as blueprint
     blueprint: vehicle.lincoln.*
 
+# Sensor configuration
 sensors:
+    # RGB camera name(unique)
     rgb:
+        # Offset location is [0, 0, 1.6], no rotation
         transform: {location: [0, 0, 1.6], rotation: [0, 0, 0]}
+        # Using sensor.camera.rgb as blueprint
         blueprint: sensor.camera.rgb
+        # Image size is 720x360, field of view is 90 degrees
         attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
 
+    # Depth RGB camera name
     depth_rgb:
+        # Offset location is [0, 0, 1.6], no rotation
         transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
+        # Using sensor.camera.depth as blueprint
         blueprint: sensor.camera.depth
+        # Image size is 720x360, field of view is 90 degrees
         attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
 
+    # Lidar name
     lidar:
+        # Offset location is [0, 0, 1.6], no rotation
         transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
+        # Using sensor.lidar.ray_cast as blueprint
         blueprint: sensor.lidar.ray_cast
+        # Range is 70 meters, rotation frequency is 20Hz, lower field of view is -45 degrees, points per second is 1280000, 64 channels
         attribute: {range: 70, rotation_frequency: 20, lower_fov: -45, points_per_second: 1280000, channels: 64}
 
+# Iteration parameters configuration
 all_frame_iter: 100
 save_frame_iter: 2
 ```
