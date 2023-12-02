@@ -45,6 +45,7 @@ CarlaDataCollector is a powerful tool with lightweight and clear structural desi
 ## ⚡️ Requirements
 
 - [CARLA](https://carla.org/) >= [0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15)
+- Other requirement see [requirement.txt](https://github.com/command-z-z/CarlaDataCollector/blob/main/requirements.txt)
 
 ## 🎨 Example
 <details>
