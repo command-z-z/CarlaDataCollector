@@ -1,11 +1,12 @@
-task: KITTI
+task: base
 exp_name: '3d-object'
-map: 'Town_10HD_opt'
+map: 'Town10HD_Opt'
 
 collector_module: lib.collectors.Basic
 client_module: lib.clients.Basic
 
 carla:
+    weather: carla.WeatherParameters.ClearNoon
     fixed_delta_seconds: 0.05
     num_of_vehicles: 10 
     num_of_walkers: 20

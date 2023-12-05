@@ -9,6 +9,37 @@ import os
 import logging
 import math
 from .image_utils import depth_to_array
+import open3d as o3d
+from matplotlib import cm
+import carla
+
+VIRIDIS = np.array(cm.get_cmap('plasma').colors)
+VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
+LABEL_COLORS = np.array([
+    (255, 255, 255), # None
+    (70, 70, 70),    # Building
+    (100, 40, 40),   # Fences
+    (55, 90, 80),    # Other
+    (220, 20, 60),   # Pedestrian
+    (153, 153, 153), # Pole
+    (157, 234, 50),  # RoadLines
+    (128, 64, 128),  # Road
+    (244, 35, 232),  # Sidewalk
+    (107, 142, 35),  # Vegetation
+    (0, 0, 142),     # Vehicle
+    (102, 102, 156), # Wall
+    (220, 220, 0),   # TrafficSign
+    (70, 130, 180),  # Sky
+    (81, 0, 81),     # Ground
+    (150, 100, 100), # Bridge
+    (230, 150, 140), # RailTrack
+    (180, 165, 180), # GuardRail
+    (250, 170, 30),  # TrafficLight
+    (110, 190, 160), # Static
+    (170, 120, 50),  # Dynamic
+    (45, 60, 150),   # Water
+    (145, 170, 100), # Terrain
+]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
 
 
 def save_ref_files(OUTPUT_FOLDER, id):
@@ -26,7 +57,9 @@ def save_image_data(filename, image):
 
 def save_depth_data(filename, image):
     logging.info("Wrote image data to %s", filename)
-    image.save_to_disk(filename)
+    # cc = carla.ColorConverter.LogarithmicDepth
+    cc = carla.ColorConverter.Depth
+    image.save_to_disk(filename, cc)
 
 def save_bbox_image_data(filename, image):
     im = Image.fromarray(image)
@@ -36,7 +69,7 @@ def save_lidar_data(filename, point_cloud, format="bin"):
     """ Saves lidar data to given filename, according to the lidar data format.
         bin is used for KITTI-data format, while .ply is the regular point cloud format
         In Unreal, the coordinate system of the engine is defined as, which is the same as the lidar points
-        z
+        z              
         ^   ^ x
         |  /
         | /
@@ -53,23 +86,37 @@ def save_lidar_data(filename, point_cloud, format="bin"):
             KITTI: X  -Y   Z
         NOTE: We do not flip the coordinate system when saving to .ply.
     """
-    logging.info("Wrote lidar data to %s", filename)
+
+    point_cloud = np.copy(np.frombuffer(point_cloud.raw_data, dtype=np.dtype('f4')))
+    point_cloud = np.reshape(point_cloud, (int(point_cloud.shape[0] / 4), 4))
+    intensity = point_cloud[:, -1]
+    points = point_cloud[:, :-1]
+    # We're negating the y to correclty visualize a world that matches
+    # what we see in Unreal since Open3D uses a right-handed coordinate system
+    points[:, :1] = -points[:, :1]
 
     if format == "bin":
-        point_cloud = np.copy(np.frombuffer(point_cloud.raw_data, dtype=np.dtype('f4')))
-        point_cloud = np.reshape(point_cloud, (int(point_cloud.shape[0] / 4), 4))
-        point_cloud = point_cloud[:, :-1]
-
-        lidar_array = [[point[0], -point[1], point[2], 1.0]
-                       for point in point_cloud]
-        lidar_array = np.array(lidar_array).astype(np.float32)
-        logging.debug("Lidar min/max of x: {} {}".format(
-                      lidar_array[:, 0].min(), lidar_array[:, 0].max()))
-        logging.debug("Lidar min/max of y: {} {}".format(
-                      lidar_array[:, 1].min(), lidar_array[:, 0].max()))
-        logging.debug("Lidar min/max of z: {} {}".format(
-                      lidar_array[:, 2].min(), lidar_array[:, 0].max()))
+        lidar_array = np.array(points).astype(np.float32)
         lidar_array.tofile(filename)
+    elif format == "ply":
+        intensity_col = 1.0 - np.log(intensity) / np.log(np.exp(-0.004 * 100))
+        int_color = np.c_[
+            np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 0]),
+            np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 1]),
+            np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 2])]
+
+        # # An example of converting points from sensor to vehicle space if we had
+        # # a carla.Transform variable named "tran":
+        # points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
+        # points = np.dot(tran.get_matrix(), points.T).T
+        # points = points[:, :-1]
+
+        point_list = o3d.geometry.PointCloud()
+        point_list.points = o3d.utility.Vector3dVector(points)
+        point_list.colors = o3d.utility.Vector3dVector(int_color)
+
+        # Save the PointCloud as a PLY file
+        o3d.io.write_point_cloud(filename, point_list)
 
 
 def save_label_data(filename, datapoints):

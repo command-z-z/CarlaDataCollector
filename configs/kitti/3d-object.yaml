@@ -22,7 +22,7 @@ sensors:
         attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
 
     depth_rgb:
-        transform: { location: [ 1, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
+        transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
         blueprint: sensor.camera.depth
         attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
 

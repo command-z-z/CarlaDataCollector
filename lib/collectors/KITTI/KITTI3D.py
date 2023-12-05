@@ -1,6 +1,7 @@
 from lib.utils.data_utils import config_to_trans
 from lib.utils.export_utils import *
 from lib.collectors import BasicDataCollector
+from loguru import logger
 
 class DataCollector(BasicDataCollector):
     def __init__(self, cfg):
@@ -26,7 +27,7 @@ class DataCollector(BasicDataCollector):
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-        self.LIDAR_PATH = os.path.join(self.OUTPUT_FOLDER, 'velodyne/{0:06}.bin')
+        self.LIDAR_PATH = os.path.join(self.OUTPUT_FOLDER, 'velodyne/{0:06}.ply')
         self.KITTI_LABEL_PATH = os.path.join(self.OUTPUT_FOLDER, 'kitti_label/{0:06}.txt')
         self.CARLA_LABEL_PATH = os.path.join(self.OUTPUT_FOLDER, 'carla_label/{0:06}.txt')
         self.IMAGE_PATH = os.path.join(self.OUTPUT_FOLDER, 'image/{0:06}.png')
@@ -44,11 +45,10 @@ class DataCollector(BasicDataCollector):
             "There already exists a dataset in {}. Would you like to (O)verwrite or (A)ppend the dataset? (O/A)".format(
                 self.OUTPUT_FOLDER))
         if answer.upper() == "O":
-            logging.info(
+            logger.info(
                 "Resetting frame number to 0 and overwriting existing")
             return 0
-        logging.info("Continuing recording data on frame number {}".format(
-            num_existing_data_files))
+        logger.info("Continuing recording data on frame number {}", num_existing_data_files)
         return num_existing_data_files
 
     def save_training_files(self, data):
@@ -60,16 +60,16 @@ class DataCollector(BasicDataCollector):
         calib_fname = self.CALIBRATION_PATH.format(self.captured_frame_no)
         depth_fname = self.DEPTH_PATH.format(self.captured_frame_no)
 
-        for _, dt in data["sensors_data"].items():
+        _, dt = next(iter(data["sensors_data"].items()))
 
-            camera_transform= config_to_trans(self.cfg.sensors.rgb.transform)
-            lidar_transform = config_to_trans(self.cfg.sensors.lidar.transform)
+        camera_transform= config_to_trans(self.cfg.sensors.rgb.transform)
+        lidar_transform = config_to_trans(self.cfg.sensors.lidar.transform)
 
-            save_ref_files(self.OUTPUT_FOLDER, self.captured_frame_no)
-            save_image_data(img_fname, dt["sensor_data"][0])
-            save_label_data(kitti_label_fname, dt["kitti_datapoints"])
-            save_label_data(carla_label_fname, dt['carla_datapoints'])
-            save_calibration_matrices([camera_transform, lidar_transform], calib_fname, dt["intrinsic"])
-            save_depth_data(depth_fname, dt["sensor_data"][1])
-            save_lidar_data(lidar_fname, dt["sensor_data"][2])
+        save_ref_files(self.OUTPUT_FOLDER, self.captured_frame_no)
+        save_image_data(img_fname, dt["sensor_data"][0])
+        save_depth_data(depth_fname, dt["sensor_data"][1])
+        save_lidar_data(lidar_fname, dt["sensor_data"][2], "ply")
+        save_label_data(kitti_label_fname, dt["kitti_datapoints"])
+        save_label_data(carla_label_fname, dt['carla_datapoints'])
+        save_calibration_matrices([camera_transform, lidar_transform], calib_fname, dt["intrinsic"])
         self.captured_frame_no += 1

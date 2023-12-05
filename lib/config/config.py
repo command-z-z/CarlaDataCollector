@@ -16,8 +16,12 @@ def parse_cfg(cfg):
         raise ValueError('task must be specified')
 
     print('EXP NAME: ', cfg.exp_name)
-    cfg.record_dir = os.path.join(cfg.record_dir, cfg.task, cfg.exp_name, cfg.map)
-    cfg.result_dir = os.path.join(cfg.result_dir, cfg.task, cfg.exp_name, cfg.map)
+    cfg.record_dir = os.path.abspath(os.path.join(cfg.record_dir, cfg.task, cfg.exp_name, cfg.map))
+    cfg.result_dir = os.path.abspath(os.path.join(cfg.result_dir, cfg.task, cfg.exp_name, cfg.map))
+    if not os.path.exists(cfg.record_dir):
+        os.makedirs(cfg.record_dir)
+    if not os.path.exists(cfg.result_dir):
+        os.makedirs(cfg.result_dir)
     modules = [key for key in cfg if '_module' in key]
     for module in modules:
         cfg[module.replace('_module', '_path')] = cfg[module].replace('.', '/') + '.py'

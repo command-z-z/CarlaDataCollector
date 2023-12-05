@@ -1,0 +1,49 @@
+parent_cfg: 'configs/basic.yaml'
+task: KITTI
+exp_name: '3d-lidar'
+map: 'Town10HD_Opt'
+
+collector_module: lib.collectors.KITTI.KITTILidar
+client_module: lib.clients.KITTI.KITTILidar
+
+carla:
+    weather: WetNoon
+    fixed_delta_seconds: 0.05
+    num_of_npc_vehicles: 50
+    num_of_npc_walkers: 20
+
+ego_vehicle:
+    blueprint: vehicle.tesla.model3
+
+sensors:
+    lidar:
+        transform: { location: [ 0, 0, 1.8 ], rotation: [ 0, 0, 0 ] }
+        blueprint: sensor.lidar.ray_cast
+        attribute: {range: 70, rotation_frequency: 20, lower_fov: -45, points_per_second: 1280000, channels: 64}
+
+    rgb:
+        transform: {location: [0, 0, 1.8], rotation: [0, 0, 0]}
+        blueprint: sensor.camera.rgb
+        attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
+
+    depth_1:
+        transform: { location: [ 0, 0, 1.8 ], rotation: [ 0, -90, 0 ] }
+        blueprint: sensor.camera.depth
+        attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
+          
+    depth_2:
+        transform: { location: [ 0, 0, 1.8 ], rotation: [ 0, 0, 0 ] }
+        blueprint: sensor.camera.depth
+        attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
+
+    depth_3:
+        transform: { location: [ 0, 0, 1.8 ], rotation: [ 0, 90, 0 ] }
+        blueprint: sensor.camera.depth
+        attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
+
+    depth_4:
+        transform: { location: [ 0, 0, 1.8 ], rotation: [ 0, 180, 0 ] }
+        blueprint: sensor.camera.depth
+        attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
+
+all_frame_iter: 100

@@ -13,13 +13,6 @@ sys.path.append("/opt/carla-simulator/PythonAPI/carla/dist/carla-0.9.12-py3.7-li
 
 import carla
 
-MAX_RENDER_DEPTH_IN_METERS = cfg["filter_config"]["max_render_depth_in_meters"]
-MIN_VISIBLE_VERTICES_FOR_RENDER = cfg["filter_config"]["min_visible_vertices_for_render"]
-MAX_OUT_VERTICES_FOR_RENDER = cfg["filter_config"]["max_out_vertices_for_render"]
-WINDOW_WIDTH = cfg["sensors"]["depth_rgb"]["attribute"]["image_size_x"]
-WINDOW_HEIGHT = cfg["sensors"]["depth_rgb"]["attribute"]["image_size_y"]
-
-
 def objects_filter(data):
     environment_objects = data["environment_objects"]
     sensors_data = data["sensors_data"]
@@ -44,7 +37,6 @@ def objects_filter(data):
                 carla_datapoints.append(carla_datapoint)
 
         data["sensors_data"][agent]["visible_actors"] = []
-
         for act in actors:
             kitti_datapoint, carla_datapoint = is_visible_by_bbox(agent, act, image, depth_data, intrinsic, extrinsic)
             if kitti_datapoint is not None:
@@ -52,7 +44,6 @@ def objects_filter(data):
                 kitti_datapoints.append(kitti_datapoint)
                 carla_datapoints.append(carla_datapoint)
 
-        data["sensors_data"][agent]["rgb_image"] = image
         data["sensors_data"][agent]["kitti_datapoints"] = kitti_datapoints
         data["sensors_data"][agent]["carla_datapoints"] = carla_datapoints
     return data
@@ -67,7 +58,7 @@ def is_visible_by_bbox(agent, obj, rgb_image, depth_data, intrinsic, extrinsic):
         vertices_pos2d = bbox_2d_from_agent(intrinsic, extrinsic, obj_bbox, obj_transform, 1)
     depth_image = depth_to_array(depth_data)
     num_visible_vertices, num_vertices_outside_camera = calculate_occlusion_stats(vertices_pos2d, depth_image)
-    if num_visible_vertices >= MIN_VISIBLE_VERTICES_FOR_RENDER and num_vertices_outside_camera < MAX_OUT_VERTICES_FOR_RENDER:
+    if num_visible_vertices >= cfg.filter_config.min_visible_vertices_for_render and num_vertices_outside_camera < cfg.filter_config.max_out_vertices_for_render:
         obj_tp = obj_type(obj)
         midpoint = midpoint_from_agent_location(obj_transform.location, extrinsic)
         bbox_2d = calc_projected_2d_bbox(vertices_pos2d)
@@ -204,7 +195,7 @@ def calculate_occlusion_stats(vertices_pos2d, depth_image):
 
     for y_2d, x_2d, vertex_depth in vertices_pos2d:
         # 点在可见范围中，并且没有超出图片范围
-        if MAX_RENDER_DEPTH_IN_METERS > vertex_depth > 0 and point_in_canvas((y_2d, x_2d)):
+        if cfg.filter_config.max_render_depth_in_meters > vertex_depth > 0 and point_in_canvas((y_2d, x_2d)):
             is_occluded = point_is_occluded(
                 (y_2d, x_2d), vertex_depth, depth_image)
             if not is_occluded:
@@ -215,7 +206,7 @@ def calculate_occlusion_stats(vertices_pos2d, depth_image):
 
 
 def point_in_canvas(pos):
-    if (pos[0] >= 0) and (pos[0] < WINDOW_HEIGHT) and (pos[1] >= 0) and (pos[1] < WINDOW_WIDTH):
+    if (pos[0] >= 0) and (pos[0] < cfg.sensors.depth_rgb.attribute.image_size_y) and (pos[1] >= 0) and (pos[1] < cfg.sensors.depth_rgb.attribute.image_size_x):
         return True
     return False
 
