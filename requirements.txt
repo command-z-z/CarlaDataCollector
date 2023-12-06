@@ -4,3 +4,4 @@ numpy
 Pillow
 loguru
 tqdm
+open3d

@@ -6,7 +6,6 @@ This file contains all the methods responsible for saving the generated data in 
 import numpy as np
 from PIL import Image
 import os
-import logging
 import math
 from .image_utils import depth_to_array
 import open3d as o3d
@@ -48,22 +47,18 @@ def save_ref_files(OUTPUT_FOLDER, id):
         path = os.path.join(OUTPUT_FOLDER, name)
         with open(path, 'a') as f:
             f.write("{0:06}".format(id) + '\n')
-        logging.info("Wrote reference files to %s", path)
 
+def save_rgb_image(filename, image):
+    im = Image.fromarray(image)
+    im.save(filename)
 
 def save_image_data(filename, image):
-    logging.info("Wrote image data to %s", filename)
     image.save_to_disk(filename)
 
 def save_depth_data(filename, image):
-    logging.info("Wrote image data to %s", filename)
-    # cc = carla.ColorConverter.LogarithmicDepth
-    cc = carla.ColorConverter.Depth
+    # cc = carla.ColorConverter.Depth
+    cc = carla.ColorConverter.LogarithmicDepth
     image.save_to_disk(filename, cc)
-
-def save_bbox_image_data(filename, image):
-    im = Image.fromarray(image)
-    im.save(filename)
 
 def save_lidar_data(filename, point_cloud, format="bin"):
     """ Saves lidar data to given filename, according to the lidar data format.
@@ -123,8 +118,6 @@ def save_label_data(filename, datapoints):
     with open(filename, 'w') as f:
         out_str = "\n".join([str(point) for point in datapoints if point])
         f.write(out_str)
-    logging.info("Wrote kitti data to %s", filename)
-
 
 def save_calibration_matrices(transform, filename, intrinsic_mat):
     """ Saves the calibration matrices to a file.
@@ -186,8 +179,3 @@ def save_calibration_matrices(transform, filename, intrinsic_mat):
         write_flat(f, "R0_rect", R0)
         write_flat(f, "Tr_velo_to_cam", TR_velodyne)
         write_flat(f, "TR_imu_to_velo", TR_imu_to_velo)
-    logging.info("Wrote all calibration matrices to %s", filename)
-
-def save_rgb_image(filename, image):
-    im = Image.fromarray(image)
-    im.save(filename)

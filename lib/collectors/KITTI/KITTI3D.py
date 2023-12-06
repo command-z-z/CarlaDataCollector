@@ -6,20 +6,15 @@ from loguru import logger
 class DataCollector(BasicDataCollector):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.cfg = cfg
-        self.OUTPUT_FOLDER = ""
         self.LIDAR_PATH = ""
         self.KITTI_LABEL_PATH = ""
         self.CARLA_LABEL_PATH = ""
         self.IMAGE_PATH = ""
         self.DEPTH_PATH = ""
         self.CALIBRATION_PATH = ""
-        self._generate_path(self.cfg.result_dir)
-        self.captured_frame_no = self._current_captured_frame_num()
+        self._generate_path()
 
-
-    def _generate_path(self,root_path):
-        self.OUTPUT_FOLDER = root_path
+    def _generate_path(self):
         folders = ['calib', 'image', 'kitti_label', 'carla_label', 'velodyne', 'depth']
 
         for folder in folders:
@@ -33,23 +28,6 @@ class DataCollector(BasicDataCollector):
         self.IMAGE_PATH = os.path.join(self.OUTPUT_FOLDER, 'image/{0:06}.png')
         self.DEPTH_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth/{0:06}.png')
         self.CALIBRATION_PATH = os.path.join(self.OUTPUT_FOLDER, 'calib/{0:06}.txt')
-
-
-    def _current_captured_frame_num(self):
-        label_path = os.path.join(self.OUTPUT_FOLDER, 'kitti_label/')
-        num_existing_data_files = len(
-            [name for name in os.listdir(label_path) if name.endswith('.txt')])
-        if num_existing_data_files == 0:
-            return 0
-        answer = input(
-            "There already exists a dataset in {}. Would you like to (O)verwrite or (A)ppend the dataset? (O/A)".format(
-                self.OUTPUT_FOLDER))
-        if answer.upper() == "O":
-            logger.info(
-                "Resetting frame number to 0 and overwriting existing")
-            return 0
-        logger.info("Continuing recording data on frame number {}", num_existing_data_files)
-        return num_existing_data_files
 
     def save_training_files(self, data):
 

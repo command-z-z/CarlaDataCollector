@@ -9,8 +9,6 @@ from lib.utils.image_utils import depth_to_array, to_rgb_array
 import math
 # from visual_utils import draw_3d_bounding_box
 
-sys.path.append("/opt/carla-simulator/PythonAPI/carla/dist/carla-0.9.12-py3.7-linux-x86_64.egg")
-
 import carla
 
 def objects_filter(data):
@@ -239,14 +237,13 @@ def midpoint_from_agent_location(location, extrinsic_mat):
     return transformed_3d_midpoint
 
 
-def camera_intrinsic(width, height):
-    k = np.identity(3)
-    k[0, 2] = width / 2.0
-    k[1, 2] = height / 2.0
-    f = width / (2.0 * math.tan(90.0 * math.pi / 360.0))
-    k[0, 0] = k[1, 1] = f
-    return k
-
+def get_camera_intrinsic(width, height, fov):
+    K = np.identity(3)
+    K[0, 2] = width / 2.0
+    K[1, 2] = height / 2.0
+    f = width / (2.0 * math.tan(fov * math.pi / 360.0))
+    K[0, 0] = K[1, 1] = f
+    return K
 
 def proj_to_camera(pos_vector, extrinsic_mat):
     """ 作用：将点的world坐标转换到相机坐标系中 """
