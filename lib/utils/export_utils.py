@@ -88,10 +88,10 @@ def save_lidar_data(filename, point_cloud, format="bin"):
     points = point_cloud[:, :-1]
     # We're negating the y to correclty visualize a world that matches
     # what we see in Unreal since Open3D uses a right-handed coordinate system
-    points[:, :1] = -points[:, :1]
+    points[:, 1] = -points[:, 1]
 
     if format == "bin":
-        lidar_array = np.array(points).astype(np.float32)
+        lidar_array = np.array(point_cloud).astype(np.float32)
         lidar_array.tofile(filename)
     elif format == "ply":
         intensity_col = 1.0 - np.log(intensity) / np.log(np.exp(-0.004 * 100))
@@ -103,7 +103,7 @@ def save_lidar_data(filename, point_cloud, format="bin"):
         # # An example of converting points from sensor to vehicle space if we had
         # # a carla.Transform variable named "tran":
         # points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
-        # points = np.dot(tran.get_matrix(), points.T).T
+        # points = np.dot(lidar.get_transform().get_matrix(), points.T).T
         # points = points[:, :-1]
 
         point_list = o3d.geometry.PointCloud()
@@ -197,15 +197,21 @@ def save_calibration_data(filename, intrinsic_list, extrinsic_inv_list):
 
     for i in range(1, len(intrinsic_list)):
         tran = get_camera_to_camera_matrix(extrinsic_inv_list[0], extrinsic_inv_list[i])
-        P = np.dot(tran[:-1].T, np.array([[0, 0, 1], [1, 0, 0], [0, -1, 0]]))
-        P = np.dot(np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]]), P.T)
+        rotation = tran[:3, :3]
+        translation = tran[:3, 3:]
+        rotation_adjusted_1 = np.dot(rotation, np.array([[0, 0, 1], [1, 0, 0], [0, -1, 0]]))
+        rotation_adjusted_2 = np.dot(np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]]), rotation_adjusted_1)
+        P = np.column_stack((rotation_adjusted_2, translation))
         P = np.dot(intrinsic_list[i], P)
         P = np.ravel(P, order=ravel_mode)
         p.append(P)
 
-    TR = get_camera_to_camera_matrix(extrinsic_inv_list[5], extrinsic_inv_list[0])[:-1]
-    TR_velodyne = np.dot(TR.T, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
-    TR_velodyne = np.array(np.dot(np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]]), TR_velodyne.T))
+    TR = get_camera_to_camera_matrix(extrinsic_inv_list[5], extrinsic_inv_list[0])
+    rotation = TR[:3, :3]
+    translation = TR[:3, 3:]
+    TR_velodyne = np.dot(rotation, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
+    TR_velodyne = np.array(np.dot(np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]]), TR_velodyne))
+    TR_velodyne = np.column_stack((TR_velodyne, translation))
 
     def write_flat(f, name, arr):
         f.write("{}: {}\n".format(name, ' '.join(
@@ -224,10 +230,16 @@ def save_pose_data(filename, lidar):
         filename (): 
         lidar (): 
     """
-    l2w = np.mat(lidar.get_transform().get_matrix())[:-1]
-    l2w = np.dot(l2w.T, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
-    l2w = np.array(l2w.T)
-    data = l2w.flatten()
+    # 4*4 lidar to world matrix
+    l2w = np.mat(lidar.get_transform().get_matrix())
+
+    rotation = l2w[:3, :3]
+    translation = l2w[:3, 3:]
+
+    adjusted_rotation = np.dot(rotation, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
+    adjusted_l2w = np.column_stack((adjusted_rotation, translation))
+    data = np.array(adjusted_l2w).flatten()
+
     with open(filename, 'a') as f:
         f.write(" ".join(map(str,[r for r in data])))
         f.write("\n")

@@ -1,7 +1,7 @@
 parent_cfg: 'configs/basic.yaml'
 task: KITTI
 exp_name: '3d-lidar'
-map: 'Town10HD_Opt'
+map: 'Town04'
 
 collector_module: lib.collectors.KITTI.KITTILidar
 client_module: lib.clients.KITTI.KITTILidar

@@ -1,4 +1,3 @@
-from lib.utils.data_utils import config_to_trans
 from lib.utils.export_utils import *
 from lib.collectors import BasicDataCollector
 
@@ -16,7 +15,7 @@ class DataCollector(BasicDataCollector):
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-        self.LIDAR_PATH = os.path.join(self.OUTPUT_FOLDER, 'velodyne/{0:06}.ply')
+        self.LIDAR_PATH = os.path.join(self.OUTPUT_FOLDER, 'velodyne/{0:06}.bin')
         self.IMAGE_PATH = os.path.join(self.OUTPUT_FOLDER, 'image/{0:06}.png')
         self.DEPTH_1_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth_1/{0:06}.png')
         self.DEPTH_2_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth_2/{0:06}.png')
@@ -45,7 +44,7 @@ class DataCollector(BasicDataCollector):
         save_depth_data(depth_2_fname, dt["sensor_data"][2])
         save_depth_data(depth_3_fname, dt["sensor_data"][3])
         save_depth_data(depth_4_fname, dt["sensor_data"][4])
-        save_lidar_data(lidar_fname, dt["sensor_data"][5], "ply")
+        save_lidar_data(lidar_fname, dt["sensor_data"][5])
         save_ego_vehicle_trajectory(car_fname, ego_vehicle)
         save_pose_data(pose_fname, dt["lidar"])
         self.captured_frame_no += 1

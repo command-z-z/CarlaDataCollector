@@ -313,5 +313,5 @@ def get_camera_to_camera_matrix(c2w_c1, c2w_c2):
     """
     w2c_c2 = np.linalg.inv(c2w_c2)
     c1_to_c2 = np.dot(w2c_c2, c2w_c1)
-    return c1_to_c2
+    return np.mat(c1_to_c2)
 

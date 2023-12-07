@@ -8,6 +8,7 @@ from lib.utils.data_utils import get_camera_intrinsic, filter_by_distance
 import carla
 from loguru import logger
 import datetime
+from lib.utils.data_utils import config_to_trans
 
 
 class BasicClient:
@@ -32,6 +33,7 @@ class BasicClient:
         settings = self.world.get_settings()
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = self.cfg.carla.fixed_delta_seconds
+        self.traffic_manager.set_synchronous_mode(True)
         self.world.apply_settings(settings)
 
     def setting_recover(self):
@@ -115,9 +117,8 @@ class BasicClient:
         self.world.tick()
 
     def set_npc_route(self):
-        self.traffic_manager.set_global_distance_to_leading_vehicle(2.5)
-        self.traffic_manager.set_synchronous_mode(True)
-        self.traffic_manager.global_percentage_speed_difference(30.0)
+        self.traffic_manager.set_global_distance_to_leading_vehicle(self.cfg.traffic_manager.global_distance_to_leading_vehicle)
+        self.traffic_manager.global_percentage_speed_difference(self.cfg.traffic_manager.global_percentage_speed_difference)
         vehicle_actors = self.world.get_actors(self.actors["npc_vehicles"])
         for vehicle in vehicle_actors:
             vehicle.set_autopilot(True, self.traffic_manager.get_port())
@@ -151,6 +152,7 @@ class BasicClient:
 
         ego_vehicle = self.world.spawn_actor(vehicle_bp, transform)
         ego_vehicle.set_autopilot(True, self.traffic_manager.get_port())
+        self.traffic_manager.ignore_lights_percentage(ego_vehicle, 100)
         self.actors["ego_vehicle"].append(ego_vehicle)
         self.actors["sensors"][ego_vehicle] = []
         for _, config in self.cfg["sensors"].items():
@@ -192,9 +194,9 @@ class BasicClient:
         return ret
 
     def _set_spectator(self, ego_vehicle):
+        spectator_transform = config_to_trans(self.cfg.spectator.transform)
         transform = ego_vehicle.get_transform()
-        self.spectator.set_transform(carla.Transform(transform.location + carla.Location(z=20),
-                                                carla.Rotation(pitch=-90)))
+        self.spectator.set_transform(carla.Transform(transform.location + spectator_transform.location, spectator_transform.rotation))
 
     def _retrieve_data(self, q):
         while True:
