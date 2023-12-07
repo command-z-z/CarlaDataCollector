@@ -9,8 +9,8 @@ client_module: lib.clients.KITTI.KITTILidar
 carla:
     weather: WetNoon
     fixed_delta_seconds: 0.05
-    num_of_npc_vehicles: 50
-    num_of_npc_walkers: 20
+    num_of_npc_vehicles: 0
+    num_of_npc_walkers: 0
 
 ego_vehicle:
     blueprint: vehicle.tesla.model3
@@ -44,6 +44,7 @@ sensors:
     lidar:
         transform: { location: [ 0, 0, 1.8 ], rotation: [ 0, 0, 0 ] }
         blueprint: sensor.lidar.ray_cast
-        attribute: {range: 70, rotation_frequency: 20, lower_fov: -45, points_per_second: 1280000, channels: 64}
+        attribute: {lower_fov: -15, upper_fov: 15, points_per_second: 1280000, channels: 256, rotation_frequency: 20, range: 80,
+                    dropoff_general_rate: 0.0, dropoff_intensity_limit: 1.0, dropoff_zero_intensity: 0.0}
 
-all_frame_iter: 100
+all_frame_iter: 1000

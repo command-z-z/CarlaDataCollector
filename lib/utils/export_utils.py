@@ -7,10 +7,10 @@ import numpy as np
 from PIL import Image
 import os
 import math
-from .image_utils import depth_to_array
 import open3d as o3d
 from matplotlib import cm
 import carla
+from .data_utils import get_camera_to_camera_matrix
 
 VIRIDIS = np.array(cm.get_cmap('plasma').colors)
 VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
@@ -179,3 +179,55 @@ def save_calibration_matrices(transform, filename, intrinsic_mat):
         write_flat(f, "R0_rect", R0)
         write_flat(f, "Tr_velo_to_cam", TR_velodyne)
         write_flat(f, "TR_imu_to_velo", TR_imu_to_velo)
+
+def save_ego_vehicle_trajectory(filename, ego_vehicle):
+    transform = ego_vehicle.get_transform()
+    data = f"Vehicle_Transform: {transform.location.x} {transform.location.y} {transform.location.z} {transform.rotation.pitch} {transform.rotation.yaw} {transform.rotation.roll}\n"
+    with open(filename, 'a') as f:
+        f.write(data)
+
+def save_calibration_data(filename, intrinsic_list, extrinsic_inv_list):
+    # KITTI format demands that we flatten in row-major order
+    p = []
+    ravel_mode = 'C'
+    P0 = intrinsic_list[0]
+    P0 = np.column_stack((P0, np.array([0, 0, 0])))
+    P0 = np.ravel(P0, order=ravel_mode)
+    p.append(P0)
+
+    for i in range(1, len(intrinsic_list)):
+        tran = get_camera_to_camera_matrix(extrinsic_inv_list[0], extrinsic_inv_list[i])
+        P = np.dot(tran[:-1].T, np.array([[0, 0, 1], [1, 0, 0], [0, -1, 0]]))
+        P = np.dot(np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]]), P.T)
+        P = np.dot(intrinsic_list[i], P)
+        P = np.ravel(P, order=ravel_mode)
+        p.append(P)
+
+    TR = get_camera_to_camera_matrix(extrinsic_inv_list[5], extrinsic_inv_list[0])[:-1]
+    TR_velodyne = np.dot(TR.T, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
+    TR_velodyne = np.array(np.dot(np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]]), TR_velodyne.T))
+
+    def write_flat(f, name, arr):
+        f.write("{}: {}\n".format(name, ' '.join(
+            map(str, arr.flatten(ravel_mode).squeeze()))))
+
+    # All matrices are written on a line with spacing
+    with open(filename, 'w') as f:
+        for i in range(len(p)):  
+            write_flat(f, "P" + str(i), p[i])
+        write_flat(f, "Tr", TR_velodyne)
+
+def save_pose_data(filename, lidar):
+    """saves the pose of the lidar in the world coordinate system to a file.
+
+    Args:
+        filename (): 
+        lidar (): 
+    """
+    l2w = np.mat(lidar.get_transform().get_matrix())[:-1]
+    l2w = np.dot(l2w.T, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
+    l2w = np.array(l2w.T)
+    data = l2w.flatten()
+    with open(filename, 'a') as f:
+        f.write(" ".join(map(str,[r for r in data])))
+        f.write("\n")

@@ -9,9 +9,11 @@ class BasicDataCollector:
         self.captured_frame_no = self._current_captured_frame_num()
 
     def _current_captured_frame_num(self):
-        label_path = os.path.join(self.OUTPUT_FOLDER, 'image/')
+        image_path = os.path.join(self.OUTPUT_FOLDER, 'image/')
+        if not os.path.exists(image_path):
+            return 0
         num_existing_data_files = len(
-            [name for name in os.listdir(label_path) if name.endswith('.png')])
+            [name for name in os.listdir(image_path) if name.endswith('.png')])
         if num_existing_data_files == 0:
             return 0
         answer = input(

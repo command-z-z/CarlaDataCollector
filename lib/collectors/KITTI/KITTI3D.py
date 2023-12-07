@@ -6,12 +6,6 @@ from loguru import logger
 class DataCollector(BasicDataCollector):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.LIDAR_PATH = ""
-        self.KITTI_LABEL_PATH = ""
-        self.CARLA_LABEL_PATH = ""
-        self.IMAGE_PATH = ""
-        self.DEPTH_PATH = ""
-        self.CALIBRATION_PATH = ""
         self._generate_path()
 
     def _generate_path(self):
