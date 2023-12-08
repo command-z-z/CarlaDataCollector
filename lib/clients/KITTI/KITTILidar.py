@@ -14,7 +14,7 @@ class Client(BasicClient):
         # set_spectator
         self._set_spectator(ego_vehicle)
 
-        ret = {"actor": None, "sensors_data": {}}
+        ret = {"actors": None, "sensors_data": {}}
         ret["actors"] = self.world.get_actors().filter('*vehicle*')
 
         data = [self._retrieve_data(q) for q in dataQue]

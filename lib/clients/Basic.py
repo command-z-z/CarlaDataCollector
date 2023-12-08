@@ -14,11 +14,11 @@ from lib.utils.data_utils import config_to_trans
 class BasicClient:
     def __init__(self, cfg):
         self.cfg = cfg
-        self.client = carla.Client('localhost', 2000)
+        self.client = carla.Client(self.cfg.carla.client.host, self.cfg.carla.client.port)
         self.client.set_timeout(5.0)
         self.client.load_world(self.cfg.map)
         self.client.start_recorder(f"{self.cfg.record_dir}/recording_{datetime.datetime.now()}.log")
-        self.traffic_manager = self.client.get_trafficmanager()
+        self.traffic_manager = self.client.get_trafficmanager(self.cfg.traffic_manager.port)
         self.world = self.client.get_world()
         self.world.set_weather(eval(f"carla.WeatherParameters.{self.cfg.carla.weather}"))
         self.spectator = self.world.get_spectator()
@@ -145,6 +145,18 @@ class BasicClient:
             # max speed
             self.world.get_actor(con_id).set_max_speed(1.4)
 
+    def _set_ego_vehicle_config(self, ego_vehicle):
+        if self.cfg.ego_vehicle.ignore_lights_percentage is not None:
+            self.traffic_manager.ignore_lights_percentage(ego_vehicle, self.cfg.ego_vehicle.ignore_lights_percentage)
+        if self.cfg.ego_vehicle.ignore_signs_percentage is not None:
+            self.traffic_manager.ignore_signs_percentage(ego_vehicle, self.cfg.ego_vehicle.ignore_signs_percentage)
+        if self.cfg.ego_vehicle.ignore_vehicles_percentage is not None:
+            self.traffic_manager.ignore_vehicles_percentage(ego_vehicle, self.cfg.ego_vehicle.ignore_vehicles_percentage)
+        if self.cfg.ego_vehicle.ignore_walkers_percentage is not None:
+            self.traffic_manager.ignore_walkers_percentage(ego_vehicle, self.cfg.ego_vehicle.ignore_walkers_percentage)
+        if self.cfg.ego_vehicle.vehicle_percentage_speed_difference is not None:
+            self.traffic_manager.vehicle_percentage_speed_difference(ego_vehicle, self.cfg.ego_vehicle.vehicle_percentage_speed_difference)
+
     def spawn_ego_vehicle(self):
         vehicle_bp = random.choice(self.world.get_blueprint_library().filter(self.cfg.ego_vehicle.blueprint))
         vehicle_bp.set_attribute('role_name', 'hero')
@@ -152,7 +164,10 @@ class BasicClient:
 
         ego_vehicle = self.world.spawn_actor(vehicle_bp, transform)
         ego_vehicle.set_autopilot(True, self.traffic_manager.get_port())
-        self.traffic_manager.ignore_lights_percentage(ego_vehicle, 100)
+
+        # set traffic manager config
+        self._set_ego_vehicle_config(ego_vehicle)
+
         self.actors["ego_vehicle"].append(ego_vehicle)
         self.actors["sensors"][ego_vehicle] = []
         for _, config in self.cfg["sensors"].items():

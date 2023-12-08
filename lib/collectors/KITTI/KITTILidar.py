@@ -4,11 +4,10 @@ from lib.collectors import BasicDataCollector
 class DataCollector(BasicDataCollector):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.save_calib = True
         self._generate_path()
 
     def _generate_path(self):
-        folders = ['image', 'depth_1', 'depth_2', 'depth_3', 'depth_4','velodyne']
+        folders = ['image', 'depth_1', 'depth_2', 'depth_3', 'depth_4', 'velodyne']
 
         for folder in folders:
             directory = os.path.join(self.OUTPUT_FOLDER, folder)
@@ -24,6 +23,7 @@ class DataCollector(BasicDataCollector):
         self.CALIB_PATH = os.path.join(self.OUTPUT_FOLDER, 'calib.txt')
         self.POSE_PATH = os.path.join(self.OUTPUT_FOLDER, 'pose.txt')
         self.CAR_PATH = os.path.join(self.OUTPUT_FOLDER, 'ego_vehicle_trajectory.txt')
+        self.BBOX_PATH = os.path.join(self.OUTPUT_FOLDER, 'bbox.txt')
 
     def save_training_files(self, data):
 
@@ -36,6 +36,8 @@ class DataCollector(BasicDataCollector):
         calib_fname = self.CALIB_PATH
         pose_fname = self.POSE_PATH
         car_fname = self.CAR_PATH
+        bbox_frname = self.BBOX_PATH
+
 
         ego_vehicle, dt = next(iter(data["sensors_data"].items()))
         save_calibration_data(calib_fname, dt["intrinsic"], dt["extrinsic_inv"])
@@ -47,4 +49,5 @@ class DataCollector(BasicDataCollector):
         save_lidar_data(lidar_fname, dt["sensor_data"][5])
         save_ego_vehicle_trajectory(car_fname, ego_vehicle)
         save_pose_data(pose_fname, dt["lidar"])
+        save_npc_data(bbox_frname, data["actors"], ego_vehicle)
         self.captured_frame_no += 1

@@ -11,6 +11,14 @@ import math
 
 import carla
 
+def get_camera_intrinsic(width, height, fov):
+    K = np.identity(3)
+    K[0, 2] = width / 2.0
+    K[1, 2] = height / 2.0
+    f = width / (2.0 * math.tan(fov * math.pi / 360.0))
+    K[0, 0] = K[1, 1] = f
+    return K
+
 def objects_filter(data):
     environment_objects = data["environment_objects"]
     sensors_data = data["sensors_data"]
@@ -236,14 +244,6 @@ def midpoint_from_agent_location(location, extrinsic_mat):
     transformed_3d_midpoint = proj_to_camera(midpoint_vector, extrinsic_mat)
     return transformed_3d_midpoint
 
-
-def get_camera_intrinsic(width, height, fov):
-    K = np.identity(3)
-    K[0, 2] = width / 2.0
-    K[1, 2] = height / 2.0
-    f = width / (2.0 * math.tan(fov * math.pi / 360.0))
-    K[0, 0] = K[1, 1] = f
-    return K
 
 def proj_to_camera(pos_vector, extrinsic_mat):
     """ 作用：将点的world坐标转换到相机坐标系中 """

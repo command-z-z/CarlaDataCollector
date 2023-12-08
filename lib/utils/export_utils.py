@@ -60,6 +60,51 @@ def save_depth_data(filename, image):
     cc = carla.ColorConverter.LogarithmicDepth
     image.save_to_disk(filename, cc)
 
+def save_npc_data(filename, actors, ego_vehicle):
+    npc_list = []
+    for npc in actors:
+        if npc.id != ego_vehicle.id:
+            type_id = npc.type_id
+            transform = npc.get_transform()
+            data = f"type_id: {type_id} {transform.location.x} {transform.location.y} {transform.location.z} {transform.rotation.pitch} {transform.rotation.yaw} {transform.rotation.roll}\n"
+            npc_list.append(data)
+    with open(filename, 'w') as f:
+        for npc_data in npc_list:
+            f.write(npc_data)
+
+def save_ego_vehicle_trajectory(filename, ego_vehicle):
+    transform = ego_vehicle.get_transform()
+    data = f"Vehicle_Transform: {transform.location.x} {transform.location.y} {transform.location.z} {transform.rotation.pitch} {transform.rotation.yaw} {transform.rotation.roll}\n"
+    with open(filename, 'a') as f:
+        f.write(data)
+
+    def add_point_to_ply(filename, x, y, z):
+        try:
+            with open(filename, 'x') as f:
+                f.write('''ply
+                    format ascii 1.0
+                    element vertex 0
+                    property float x
+                    property float y
+                    property float z
+                    end_header
+                    ''')
+        except FileExistsError:
+            pass
+
+        with open(filename, 'r+') as f:
+            lines = f.readlines()
+            vertex_line = lines[2].split()
+            vertex_count = int(vertex_line[2]) + 1
+            lines[2] = 'element vertex {}\n'.format(vertex_count)
+
+            f.seek(0)
+            f.writelines(lines)
+            f.write(f"{x} {y} {z}\n")
+    filename = filename.replace('txt', 'ply')
+    add_point_to_ply(filename, transform.location.x, transform.location.y, transform.location.z)
+
+
 def save_lidar_data(filename, point_cloud, format="bin"):
     """ Saves lidar data to given filename, according to the lidar data format.
         bin is used for KITTI-data format, while .ply is the regular point cloud format
@@ -180,11 +225,6 @@ def save_calibration_matrices(transform, filename, intrinsic_mat):
         write_flat(f, "Tr_velo_to_cam", TR_velodyne)
         write_flat(f, "TR_imu_to_velo", TR_imu_to_velo)
 
-def save_ego_vehicle_trajectory(filename, ego_vehicle):
-    transform = ego_vehicle.get_transform()
-    data = f"Vehicle_Transform: {transform.location.x} {transform.location.y} {transform.location.z} {transform.rotation.pitch} {transform.rotation.yaw} {transform.rotation.roll}\n"
-    with open(filename, 'a') as f:
-        f.write(data)
 
 def save_calibration_data(filename, intrinsic_list, extrinsic_inv_list):
     # KITTI format demands that we flatten in row-major order
