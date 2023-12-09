@@ -11,13 +11,14 @@ cfg.record_dir = 'data/record'
 # result
 cfg.result_dir = 'data/result'
 
-def parse_cfg(cfg):
+def parse_cfg(cfg, args):
     if len(cfg.task) == 0:
         raise ValueError('task must be specified')
 
     print('EXP NAME: ', cfg.exp_name)
     cfg.record_dir = os.path.abspath(os.path.join(cfg.record_dir, cfg.task, cfg.exp_name, cfg.map))
     cfg.result_dir = os.path.abspath(os.path.join(cfg.result_dir, cfg.task, cfg.exp_name, cfg.map))
+    cfg.seed = args.seed
     if not os.path.exists(cfg.record_dir):
         os.makedirs(cfg.record_dir)
     if not os.path.exists(cfg.result_dir):
@@ -37,12 +38,12 @@ def make_cfg(args):
             cfg.merge_from_other_cfg(current_cfg)
         return cfg
     cfg_ = merge_cfg(args.cfg_file, cfg)
-    parse_cfg(cfg_)
+    parse_cfg(cfg_, args)
     return cfg_
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cfg_file", default="configs/base.yaml", type=str)
-parser.add_argument('--random_seed', help='Set seed for repeating executions (default: None)', default=None)
+parser.add_argument('--seed', help='Set seed for repeating executions (default: None)', type=int, default=None)
 args = parser.parse_args()
 
 cfg = make_cfg(args)

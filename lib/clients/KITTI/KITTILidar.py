@@ -2,6 +2,7 @@ import numpy as np
 
 from lib.clients import BasicClient
 from lib.utils.data_utils import get_camera_intrinsic
+from lib.utils.vehicle_utils import auto_decide_overtake_direction
 
 class Client(BasicClient):
     def __init__(self, cfg):
@@ -13,6 +14,9 @@ class Client(BasicClient):
         
         # set_spectator
         self._set_spectator(ego_vehicle)
+
+        # set overtaking
+        auto_decide_overtake_direction(ego_vehicle, self.world, self.traffic_manager)
 
         ret = {"actors": None, "sensors_data": {}}
         ret["actors"] = self.world.get_actors().filter('*vehicle*')

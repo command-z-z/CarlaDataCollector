@@ -1,4 +1,3 @@
-import sys
 from lib.config import cfg
 
 import numpy as np
@@ -7,7 +6,6 @@ from numpy.linalg import inv
 from lib.labels import KittiLabel, CarlaLabel
 from lib.utils.image_utils import depth_to_array, to_rgb_array
 import math
-# from visual_utils import draw_3d_bounding_box
 
 import carla
 

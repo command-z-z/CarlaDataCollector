@@ -1,7 +1,7 @@
 parent_cfg: 'configs/basic.yaml'
 task: KITTI
 exp_name: '3d-lidar'
-map: 'Town03'
+map: 'Town10HD'
 
 collector_module: lib.collectors.KITTI.KITTILidar
 client_module: lib.clients.KITTI.KITTILidar
@@ -9,7 +9,7 @@ client_module: lib.clients.KITTI.KITTILidar
 carla:
     weather: WetNoon
     fixed_delta_seconds: 0.05
-    num_of_npc_vehicles: 10
+    num_of_npc_vehicles: 30
     num_of_npc_walkers: 0
 
 ego_vehicle:
@@ -52,4 +52,4 @@ sensors:
         attribute: {lower_fov: -15, upper_fov: 15, points_per_second: 1280000, channels: 256, rotation_frequency: 20, range: 80,
                     dropoff_general_rate: 0.0, dropoff_intensity_limit: 1.0, dropoff_zero_intensity: 0.0}
 
-all_frame_iter: 1000
+all_frame_iter: 5000

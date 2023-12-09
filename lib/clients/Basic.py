@@ -28,6 +28,14 @@ class BasicClient:
         self.actors = {"npc_vehicles": [], "npc_walkers": [], "ego_vehicle": [], "sensors": {}}
         self.data = {"sensor_data": {}}
 
+        self._set_random_seed()
+
+    def _set_random_seed(self):
+        if self.cfg.seed is not None:
+            random.seed(self.cfg.seed)
+            self.world.set_pedestrians_seed(self.cfg.seed)
+            self.traffic_manager.set_random_device_seed(self.cfg.seed)
+
     def set_synchrony(self):
         self.init_settings = self.world.get_settings()
         settings = self.world.get_settings()

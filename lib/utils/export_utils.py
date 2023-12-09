@@ -252,6 +252,7 @@ def save_calibration_data(filename, intrinsic_list, extrinsic_inv_list):
     TR_velodyne = np.dot(rotation, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
     TR_velodyne = np.array(np.dot(np.array([[0, 1, 0], [0, 0, -1], [1, 0, 0]]), TR_velodyne))
     TR_velodyne = np.column_stack((TR_velodyne, translation))
+    TR_velodyne = np.array(TR_velodyne)
 
     def write_flat(f, name, arr):
         f.write("{}: {}\n".format(name, ' '.join(
