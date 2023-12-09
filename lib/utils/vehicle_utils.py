@@ -1,4 +1,5 @@
 import carla
+import math
 
 def auto_decide_overtake_direction(ego_vehicle, world, traffic_manager, safe_distance=22):
     ego_location = ego_vehicle.get_location()
@@ -19,7 +20,20 @@ def auto_decide_overtake_direction(ego_vehicle, world, traffic_manager, safe_dis
             if distance < safe_distance:
                 overtake_direction = determine_overtake_direction(ego_waypoint)
                 print("overtake direction: ", overtake_direction)
-                perform_overtake(ego_vehicle, traffic_manager, overtake_direction, distance)
+                perform_overtake(ego_vehicle, traffic_manager, overtake_direction)
+
+    # if is_vehicle_stationary(ego_vehicle):
+    #     new_start_location = get_location_ahead_of_vehicle(ego_vehicle, 8)
+
+    #     # 关闭自动驾驶
+    #     ego_vehicle.set_autopilot(False)
+
+    #     # 将车辆传送到新的位置（假设您有新的起点）
+    #     ego_vehicle.set_location(new_start_location)
+
+    #     # 重新启用自动驾驶
+    #     print("re-enable autopilot")
+    #     ego_vehicle.set_autopilot(True)
 
 def determine_overtake_direction(waypoint):
     if waypoint.lane_type == carla.LaneType.Driving and waypoint.lane_change == carla.LaneChange.Right:
@@ -29,22 +43,9 @@ def determine_overtake_direction(waypoint):
     else:
         return 'none' 
 
-def perform_overtake(ego_vehicle, traffic_maneger, direction, distance):
+def perform_overtake(ego_vehicle, traffic_maneger, direction):
     if direction == 'none':
         print("no overtaking, please alter your route")
-        if distance < 6:
-            new_start_location = get_location_ahead_of_vehicle(ego_vehicle, 10)
-
-            # 关闭自动驾驶
-            ego_vehicle.set_autopilot(False)
-
-            # 将车辆传送到新的位置（假设您有新的起点）
-            ego_vehicle.set_location(new_start_location)
-
-            # 重新启用自动驾驶
-            print("re-enable autopilot")
-            ego_vehicle.set_autopilot(True)
-
     elif direction == 'right':
         traffic_maneger.force_lane_change(ego_vehicle, True)
     elif direction == 'left':
@@ -65,12 +66,31 @@ def get_location_ahead_of_vehicle(vehicle, distance):
     yaw = rotation.yaw * (3.14159265 / 180)
 
     new_location = carla.Location(
-        x=location.x + distance * cos(yaw),
-        y=location.y + distance * sin(yaw),
+        x=location.x + distance * math.cos(yaw),
+        y=location.y + distance * math.sin(yaw),
         z=location.z
     )
 
     return new_location
+
+def is_vehicle_stationary(vehicle, stationary_threshold=0.1):
+    """
+    判断车辆是否静止。
+
+    :param vehicle: CARLA中的车辆对象
+    :param stationary_threshold: 车辆被认为静止的速度阈值（默认0.1米/秒）
+    :return: 如果车辆静止，则返回True，否则返回False
+    """
+    # 获取车辆的速度向量
+    velocity = vehicle.get_velocity()
+
+    # 计算速度的模
+    speed = (velocity.x**2 + velocity.y**2 + velocity.z**2)**0.5
+    print("speed: ", speed)
+
+    # 判断速度是否低于阈值
+    return speed < stationary_threshold
+
 
 
 
