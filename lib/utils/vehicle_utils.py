@@ -16,10 +16,8 @@ def auto_decide_overtake_direction(ego_vehicle, world, traffic_manager, safe_dis
         if vehicle_waypoint.road_id == ego_waypoint.road_id and \
            vehicle_waypoint.lane_id == ego_waypoint.lane_id:
             distance = vehicle_location.distance(ego_location)
-            print("distance: ", distance)
             if distance < safe_distance:
                 overtake_direction = determine_overtake_direction(ego_waypoint)
-                print("overtake direction: ", overtake_direction)
                 perform_overtake(ego_vehicle, traffic_manager, overtake_direction)
 
     # if is_vehicle_stationary(ego_vehicle):
@@ -81,14 +79,10 @@ def is_vehicle_stationary(vehicle, stationary_threshold=0.1):
     :param stationary_threshold: 车辆被认为静止的速度阈值（默认0.1米/秒）
     :return: 如果车辆静止，则返回True，否则返回False
     """
-    # 获取车辆的速度向量
     velocity = vehicle.get_velocity()
 
-    # 计算速度的模
     speed = (velocity.x**2 + velocity.y**2 + velocity.z**2)**0.5
-    print("speed: ", speed)
 
-    # 判断速度是否低于阈值
     return speed < stationary_threshold
 
 

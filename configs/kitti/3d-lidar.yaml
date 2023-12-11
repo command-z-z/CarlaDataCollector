@@ -1,13 +1,13 @@
 parent_cfg: 'configs/basic.yaml'
 task: KITTI
 exp_name: '3d-lidar'
-map: 'Town10HD'
+map: 'Town03'
 
 collector_module: lib.collectors.KITTI.KITTILidar
 client_module: lib.clients.KITTI.KITTILidar
 
 carla:
-    weather: WetNoon
+    weather: ClearNoon
     fixed_delta_seconds: 0.05
     num_of_npc_vehicles: 30
     num_of_npc_walkers: 0

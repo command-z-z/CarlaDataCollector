@@ -1,6 +1,7 @@
-from lib.utils.data_utils import config_to_trans
 from lib.utils.export_utils import *
 from loguru import logger
+import os
+import shutil
 
 class BasicDataCollector:
     def __init__(self, cfg):
@@ -17,11 +18,20 @@ class BasicDataCollector:
         if num_existing_data_files == 0:
             return 0
         answer = input(
-            "There already exists a dataset in {}. Would you like to (O)verwrite or (A)ppend the dataset? (O/A)".format(
+            "There already exists a dataset in {}. Would you like to (D)elete or (A)ppend the dataset? (D/A)".format(
                 self.OUTPUT_FOLDER))
-        if answer.upper() == "O":
-            logger.info(
-                "Resetting frame number to 0 and overwriting existing")
+        if answer.upper() == "D":
+            logger.info( 
+                "Resetting frame number to 0 and Delete existing")
+            self.delete_all_files_and_folders(self.OUTPUT_FOLDER)
             return 0
         logger.info("Continuing recording data on frame number {}", num_existing_data_files)
         return num_existing_data_files
+
+    def delete_all_files_and_folders(self, folder_path):
+        for item in os.listdir(folder_path):
+            item_path = os.path.join(folder_path, item)
+            if os.path.isdir(item_path):
+                shutil.rmtree(item_path)
+            else:
+                os.remove(item_path)
