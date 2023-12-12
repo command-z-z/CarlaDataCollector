@@ -298,4 +298,4 @@ How to add a new example for CarlaDataCollector:
 
 ## 🍺 Contact
 
-For CarlaDataCollector bug reports and feature requests please visit [GitHub Issues](https://github.com/command-z-z/command-z-z/issues), and join our [Discord](https://discord.gg/2QGjgzgM) community for questions and discussions!
+For CarlaDataCollector bug reports and feature requests please visit [GitHub Issues](https://github.com/command-z-z/command-z-z/issues), and join our [Discord](https://discord.gg/2KeEEUH7Jw) community for questions and discussions!
