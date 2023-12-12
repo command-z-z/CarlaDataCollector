@@ -10,7 +10,7 @@ def main():
     try:
         client.set_synchrony()
         client.spawn_npc()
-        # client.set_npc_route()
+        client.set_npc_route()
         client.spawn_ego_vehicle()
         client.sensor_listen()
         for _ in tqdm(range(cfg.all_frame_iter)):

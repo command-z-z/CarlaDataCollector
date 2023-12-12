@@ -23,13 +23,10 @@ def auto_decide_overtake_direction(ego_vehicle, world, traffic_manager, safe_dis
     # if is_vehicle_stationary(ego_vehicle):
     #     new_start_location = get_location_ahead_of_vehicle(ego_vehicle, 8)
 
-    #     # 关闭自动驾驶
     #     ego_vehicle.set_autopilot(False)
 
-    #     # 将车辆传送到新的位置（假设您有新的起点）
     #     ego_vehicle.set_location(new_start_location)
 
-    #     # 重新启用自动驾驶
     #     print("re-enable autopilot")
     #     ego_vehicle.set_autopilot(True)
 
@@ -50,12 +47,18 @@ def perform_overtake(ego_vehicle, traffic_maneger, direction):
         traffic_maneger.force_lane_change(ego_vehicle, False)
 
 def get_location_ahead_of_vehicle(vehicle, distance):
-    """
-    计算车辆前方特定距离的位置。
+    """Calculates the location ahead of the vehicle at a specified distance.
 
-    :param vehicle: CARLA中的车辆对象
-    :param distance: 要计算的距离（单位：米）
-    :return: carla.Location对象，表示车辆前方特定距离的位置
+    This function computes a point that is a certain distance directly in front of the given vehicle,
+    taking into account the vehicle's current location and orientation.
+
+    Args:
+        vehicle (carla.Vehicle): The vehicle object in CARLA.
+        distance (float): The distance ahead of the vehicle to calculate the location (in meters).
+
+    Returns:
+        carla.Location: The calculated location point ahead of the vehicle.
+
     """
     current_transform = vehicle.get_transform()
     location = current_transform.location
@@ -73,11 +76,17 @@ def get_location_ahead_of_vehicle(vehicle, distance):
 
 def is_vehicle_stationary(vehicle, stationary_threshold=0.1):
     """
-    判断车辆是否静止。
+    Determines if the vehicle is stationary.
 
-    :param vehicle: CARLA中的车辆对象
-    :param stationary_threshold: 车辆被认为静止的速度阈值（默认0.1米/秒）
-    :return: 如果车辆静止，则返回True，否则返回False
+    This function checks if the vehicle's speed is below a certain threshold, indicating that it is stationary.
+
+    Args:
+        vehicle (carla.Vehicle): The vehicle object in CARLA.
+        stationary_threshold (float, optional): The speed threshold below which the vehicle is considered stationary (default is 0.1 meters/second).
+
+    Returns:
+        bool: True if the vehicle is stationary, False otherwise.
+
     """
     velocity = vehicle.get_velocity()
 

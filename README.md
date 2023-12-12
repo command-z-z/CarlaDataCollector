@@ -49,9 +49,28 @@ CarlaDataCollector is a powerful tool with lightweight and clear structural desi
 
 ## 🎨 Example
 <details>
+<summary><b>KITTI-3D-lidar</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
+
+Generate simulation lidar data set in KITTI odometry dataset format based on CARLA Simulator. Use nvidia [NKSR](https://research.nvidia.com/labs/toronto-ai/NKSR/) method reconstruct mesh by lidar point cloud.
+```
+python generator.py --cfg_file ./configs/kitti/3d-lidar.yaml
+```
+
+| LIDAR | [NKSR](https://github.com/nv-tlabs/NKSR) |
+| :-:   | :-:   |
+| ![](./assets/lidar.png) | ![](./assets/nksr.png) |
+
+You can reproduce the result from above image by following command line. More details and environment setup, please find from [NKSR](https://github.com/nv-tlabs/NKSR) repository.
+```
+python scripts/recon_nksr.py
+```
+
+</details>
+
+<details>
 <summary><b>KITTI-3D-object</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
 
-Generate simulation data set in KITTI 2D/3D target detection data set format based on CARLA Simulator(Reference from [Repo](https://github.com/mmmmaomao/DataGenerator)).
+Generate simulation data set in KITTI 2D/3D target detection dataset format based on CARLA Simulator(Reference from [Repo](https://github.com/mmmmaomao/DataGenerator)).
 ```
 python generator.py --cfg_file ./configs/kitti/3d-object.yaml
 ```
@@ -73,30 +92,37 @@ git clone https://github.com/command-z-z/CARLA-KITTI.git
 <details>
 <summary><b>Customized SynchronyClient</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
 
-Inherit the function from `BasicSynchronyClient` and overload the `tick` function according to your own data collection requirements.
+Inherit the function from `BasicClient` and overload the `tick` function according to your own data collection requirements.
 ```python
-class SynchronyClient(BasicSynchronyClient):
+class Client(BasicClient):
     def __init__(self, cfg):
         super().__init__(cfg)
 
     def tick(self):
         self.frame = self.world.tick()
-        ret = {"environment_objects": None, "actors": None, "sensors_data": {}}
+        ego_vehicle, dataQue = next(iter(self.data["sensor_data"].items()))
+        
+        # set_spectator
+        self._set_spectator(ego_vehicle)
 
-        ret["environment_objects"] = self.world.get_environment_objects(carla.CityObjectLabel.Any)
-        ret["actors"] = self.world.get_actors()
-        image_width = self.cfg.sensors.rgb.attribute.image_size_x
-        image_height = self.cfg.sensors.rgb.attribute.image_size_y
-        for ego_vehicle, dataQue in self.data["sensor_data"].items():
-            data = [self._retrieve_data(q) for q in dataQue]
-            assert all(x.frame == self.frame for x in data)
-            ret["sensors_data"][ego_vehicle] = {}
-            ret["sensors_data"][ego_vehicle]["sensor_data"] = data
-            ret["sensors_data"][ego_vehicle]["intrinsic"] = camera_intrinsic(image_width, image_height)
-            ret["sensors_data"][ego_vehicle]["extrinsic"] = np.mat(
-                self.actors["sensors"][ego_vehicle][0].get_transform().get_matrix())
-        filter_by_distance(ret, self.cfg["filter_config"]["preliminary_filter_distance"])
-        ret = objects_filter(ret)
+        # set overtaking
+        auto_decide_overtake_direction(ego_vehicle, self.world, self.traffic_manager)
+
+        ret = {"actors": None, "sensors_data": {}}
+        ret["actors"] = self.world.get_actors().filter('*vehicle*')
+
+        data = [self._retrieve_data(q) for q in dataQue]
+        assert all(x.frame == self.frame for x in data)
+
+        sensors = self.actors["sensors"][ego_vehicle]
+        sensor_intrinsic = [get_camera_intrinsic(int(sensor.attributes['image_size_x']), int(sensor.attributes['image_size_y']), int(sensor.attributes['fov'])) for sensor in sensors[:5]]
+        sensor_extrinsic = [np.mat(sensor.get_transform().get_matrix()) for sensor in sensors]
+
+        ret["sensors_data"][ego_vehicle] = {}
+        ret["sensors_data"][ego_vehicle]["sensor_data"] = data
+        ret["sensors_data"][ego_vehicle]["intrinsic"] = sensor_intrinsic
+        ret["sensors_data"][ego_vehicle]["extrinsic_inv"] = sensor_extrinsic
+        ret["sensors_data"][ego_vehicle]["lidar"] = sensors[5]
         return ret
 ```
 
@@ -111,21 +137,10 @@ Inherit the function from `BasicDataCollector` and overload the function accordi
 class DataCollector(BasicDataCollector):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.cfg = cfg
-        self.OUTPUT_FOLDER = ""
-        self.LIDAR_PATH = ""
-        self.KITTI_LABEL_PATH = ""
-        self.CARLA_LABEL_PATH = ""
-        self.IMAGE_PATH = ""
-        self.DEPTH_PATH = ""
-        self.CALIBRATION_PATH = ""
-        self._generate_path(self.cfg.result_dir)
-        self.captured_frame_no = self._current_captured_frame_num()
+        self._generate_path()
 
-
-    def _generate_path(self,root_path):
-        self.OUTPUT_FOLDER = root_path
-        folders = ['calib', 'image', 'kitti_label', 'carla_label', 'velodyne', 'depth']
+    def _generate_path(self):
+        folders = ['image', 'depth_1', 'depth_2', 'depth_3', 'depth_4', 'velodyne']
 
         for folder in folders:
             directory = os.path.join(self.OUTPUT_FOLDER, folder)
@@ -133,51 +148,41 @@ class DataCollector(BasicDataCollector):
                 os.makedirs(directory)
 
         self.LIDAR_PATH = os.path.join(self.OUTPUT_FOLDER, 'velodyne/{0:06}.bin')
-        self.KITTI_LABEL_PATH = os.path.join(self.OUTPUT_FOLDER, 'kitti_label/{0:06}.txt')
-        self.CARLA_LABEL_PATH = os.path.join(self.OUTPUT_FOLDER, 'carla_label/{0:06}.txt')
         self.IMAGE_PATH = os.path.join(self.OUTPUT_FOLDER, 'image/{0:06}.png')
-        self.DEPTH_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth/{0:06}.png')
-        self.CALIBRATION_PATH = os.path.join(self.OUTPUT_FOLDER, 'calib/{0:06}.txt')
-
-
-    def _current_captured_frame_num(self):
-        label_path = os.path.join(self.OUTPUT_FOLDER, 'kitti_label/')
-        num_existing_data_files = len(
-            [name for name in os.listdir(label_path) if name.endswith('.txt')])
-        if num_existing_data_files == 0:
-            return 0
-        answer = input(
-            "There already exists a dataset in {}. Would you like to (O)verwrite or (A)ppend the dataset? (O/A)".format(
-                self.OUTPUT_FOLDER))
-        if answer.upper() == "O":
-            logging.info(
-                "Resetting frame number to 0 and overwriting existing")
-            return 0
-        logging.info("Continuing recording data on frame number {}".format(
-            num_existing_data_files))
-        return num_existing_data_files
+        self.DEPTH_1_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth_1/{0:06}.png')
+        self.DEPTH_2_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth_2/{0:06}.png')
+        self.DEPTH_3_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth_3/{0:06}.png')
+        self.DEPTH_4_PATH = os.path.join(self.OUTPUT_FOLDER, 'depth_4/{0:06}.png')
+        self.CALIB_PATH = os.path.join(self.OUTPUT_FOLDER, 'calib.txt')
+        self.POSE_PATH = os.path.join(self.OUTPUT_FOLDER, 'pose.txt')
+        self.CAR_PATH = os.path.join(self.OUTPUT_FOLDER, 'ego_vehicle_trajectory.txt')
+        self.BBOX_PATH = os.path.join(self.OUTPUT_FOLDER, 'bbox.txt')
 
     def save_training_files(self, data):
 
         lidar_fname = self.LIDAR_PATH.format(self.captured_frame_no)
-        kitti_label_fname = self.KITTI_LABEL_PATH.format(self.captured_frame_no)
-        carla_label_fname = self.CARLA_LABEL_PATH.format(self.captured_frame_no)
         img_fname = self.IMAGE_PATH.format(self.captured_frame_no)
-        calib_fname = self.CALIBRATION_PATH.format(self.captured_frame_no)
-        depth_fname = self.DEPTH_PATH.format(self.captured_frame_no)
+        depth_1_fname = self.DEPTH_1_PATH.format(self.captured_frame_no)
+        depth_2_fname = self.DEPTH_2_PATH.format(self.captured_frame_no)
+        depth_3_fname = self.DEPTH_3_PATH.format(self.captured_frame_no)
+        depth_4_fname = self.DEPTH_4_PATH.format(self.captured_frame_no)
+        calib_fname = self.CALIB_PATH
+        pose_fname = self.POSE_PATH
+        car_fname = self.CAR_PATH
+        bbox_frname = self.BBOX_PATH
 
-        for _, dt in data["sensors_data"].items():
 
-            camera_transform= config_to_trans(self.cfg.sensors.rgb.transform)
-            lidar_transform = config_to_trans(self.cfg.sensors.lidar.transform)
-
-            save_ref_files(self.OUTPUT_FOLDER, self.captured_frame_no)
-            save_image_data(img_fname, dt["sensor_data"][0])
-            save_label_data(kitti_label_fname, dt["kitti_datapoints"])
-            save_label_data(carla_label_fname, dt['carla_datapoints'])
-            save_calibration_matrices([camera_transform, lidar_transform], calib_fname, dt["intrinsic"])
-            save_depth_data(depth_fname, dt["sensor_data"][1])
-            save_lidar_data(lidar_fname, dt["sensor_data"][2])
+        ego_vehicle, dt = next(iter(data["sensors_data"].items()))
+        save_calibration_data(calib_fname, dt["intrinsic"], dt["extrinsic_inv"])
+        save_image_data(img_fname, dt["sensor_data"][0])
+        save_depth_data(depth_1_fname, dt["sensor_data"][1])
+        save_depth_data(depth_2_fname, dt["sensor_data"][2])
+        save_depth_data(depth_3_fname, dt["sensor_data"][3])
+        save_depth_data(depth_4_fname, dt["sensor_data"][4])
+        save_lidar_data(lidar_fname, dt["sensor_data"][5])
+        save_ego_vehicle_trajectory(car_fname, ego_vehicle)
+        save_pose_data(pose_fname, dt["lidar"])
+        save_npc_data(bbox_frname, data["actors"], ego_vehicle)
         self.captured_frame_no += 1
 ```
 
@@ -190,62 +195,88 @@ class DataCollector(BasicDataCollector):
 You can inherit this [basic.yaml](https://github.com/command-z-z/CarlaDataCollector/blob/main/configs/basic.yaml) by `parent_cfg` parameter and then add or modify some parameters you want.The basic configuration file is as follows:
 
 ```yaml
-# Task type is KITTI
-task: KITTI
-# Experiment name is '3d-object'
-exp_name: '3d-object'
-# Using map Town_10HD_opt
-map: 'Town_10HD_opt'
+# Base task or scenario type for the simulation
+task: base
 
-# Collector module 
+# Name of the experiment or simulation run
+exp_name: '3d-object'
+
+# Map used in the simulation
+map: 'Town10HD_Opt'
+
+# Module used for data collection
 collector_module: lib.collectors.Basic
-# Client module
+
+# Module for the simulation client
 client_module: lib.clients.Basic
 
-# Carla configuration
+# CARLA simulator specific configurations
 carla:
-    # Fixed time step is 0.05 seconds for sync
+    client:
+        # Server host address for the CARLA server
+        host: 'localhost'
+        # Port number for connecting to the CARLA server
+        port: 2000
+    # Weather condition in the simulation
+    weather: WetNoon
+    # Time step in seconds for the simulation
     fixed_delta_seconds: 0.05
-    # Number of npc vehicles 
-    num_of_vehicles: 10 
-    # Number of npc walkers
-    num_of_walkers: 20
+    # Number of non-player character vehicles in the simulation
+    num_of_npc_vehicles: 10 
+    # Number of NPC pedestrians or walkers in the simulation
+    num_of_npc_walkers: 20
 
-# Ego vehicle configuration
+# Configuration for the spectator viewpoint
+spectator:
+    transform:
+        # Location coordinates of the spectator
+        location: [0, 0, 20]
+        # Rotation angles of the spectator camera
+        rotation: [-90, 0, 0]
+    
+# Traffic manager configurations
+traffic_manager: 
+    # Port number for the traffic manager service
+    port: 8000
+    # Default distance to maintain from the vehicle ahead for all NPCs
+    global_distance_to_leading_vehicle: 2.5 
+    # Default percentage variation from the speed limit for all NPCs
+    global_percentage_speed_difference: 30.0
+
+# Configuration for the player-controlled vehicle
 ego_vehicle:
-    # Using witch type car as blueprint
+    # Specifies the vehicle model, any model from the Lincoln series
     blueprint: vehicle.lincoln.*
+    # Percentage chance of ignoring traffic lights, set to 0%
+    ignore_lights_percentage: 0.0
+    # Percentage chance of ignoring traffic signs, set to 0%
+    ignore_signs_percentage: 0.0
+    # Percentage chance of ignoring other vehicles, set to 0%
+    ignore_vehicles_percentage: 0.0
+    # Percentage chance of ignoring pedestrians, set to 0%
+    ignore_walkers_percentage: 0.0
+    # Percentage variation from the speed limit for the player-controlled vehicle
+    vehicle_percentage_speed_difference: 30.0
 
-# Sensor configuration
+# Configuration for sensors attached to the ego vehicle
 sensors:
-    # RGB camera name(unique)
+    # Configuration for the RGB camera sensor
     rgb:
-        # Offset location is [0, 0, 1.6], no rotation
-        transform: {location: [0, 0, 1.6], rotation: [0, 0, 0]}
-        # Using sensor.camera.rgb as blueprint
+        transform:
+            # Location coordinates of the camera
+            location: [0, 0, 1.6]
+            # Rotation angles of the camera
+            rotation: [0, 0, 0]
+        # Specifies the sensor type as an RGB camera
         blueprint: sensor.camera.rgb
-        # Image size is 720x360, field of view is 90 degrees
-        attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
+        attribute:
+            # The resolution of the camera image
+            image_size_x: 720
+            image_size_y: 360
+            # The field of view of the camera
+            fov: 90
 
-    # Depth RGB camera name
-    depth_rgb:
-        # Offset location is [0, 0, 1.6], no rotation
-        transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
-        # Using sensor.camera.depth as blueprint
-        blueprint: sensor.camera.depth
-        # Image size is 720x360, field of view is 90 degrees
-        attribute: { image_size_x: 720, image_size_y: 360, fov: 90 }
-
-    # Lidar name
-    lidar:
-        # Offset location is [0, 0, 1.6], no rotation
-        transform: { location: [ 0, 0, 1.6 ], rotation: [ 0, 0, 0 ] }
-        # Using sensor.lidar.ray_cast as blueprint
-        blueprint: sensor.lidar.ray_cast
-        # Range is 70 meters, rotation frequency is 20Hz, lower field of view is -45 degrees, points per second is 1280000, 64 channels
-        attribute: {range: 70, rotation_frequency: 20, lower_fov: -45, points_per_second: 1280000, channels: 64}
-
-# Iteration parameters configuration
+# Number of frames or iterations to run the simulation
 all_frame_iter: 100
 ```
 

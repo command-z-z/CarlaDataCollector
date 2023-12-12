@@ -300,14 +300,19 @@ def config_to_trans(trans_config):
     return transform
 
 def get_camera_to_camera_matrix(c2w_c1, c2w_c2):
-    """
+    """Computes the transformation matrix from one camera's coordinate system to another.
+
+    This function calculates the transformation matrix that converts coordinates from the first camera's frame of reference 
+    to the second camera's frame of reference. It involves computing the inverse of the second camera's world-to-camera 
+    transformation matrix and then multiplying it by the first camera's world-to-camera transformation matrix.
 
     Args:
-        c2w_c1 (): 
-        c2w_c2 (): 
+        c2w_c1 (numpy.ndarray): The world-to-camera transformation matrix for the first camera.
+        c2w_c2 (numpy.ndarray): The world-to-camera transformation matrix for the second camera.
 
     Returns:
-        
+        numpy.matrix: The camera-to-camera transformation matrix from the first camera's frame to the second camera's frame.
+
     """
     w2c_c2 = np.linalg.inv(c2w_c2)
     c1_to_c2 = np.dot(w2c_c2, c2w_c1)

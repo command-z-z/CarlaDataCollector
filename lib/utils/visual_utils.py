@@ -1,10 +1,14 @@
 def draw_3d_bounding_box(array, vertices_pos2d):
+    """Draws a 3D bounding box on an image.
+
+    This function connects vertices of a 3D bounding box and draws lines between them on a 2D image array.
+    It uses a vertex graph to determine which vertices are connected and then draws lines between these connected vertices.
+
+    Args:
+        array (numpy.ndarray): The image array on which the bounding box will be drawn.
+        vertices_pos2d (list): A list of 2D positions (tuples) of the vertices of the bounding box.
+
     """
-    在图片上将八个bbox的顶点用线连接起来，绘制3d bbox
-    """
-    # Shows which verticies that are connected so that we can draw lines between them
-    # The key of the dictionary is the index in the bbox array, and the corresponding value is a list of indices
-    # referring to the same array.
     vertex_graph = {0: [1, 2, 4],
                     1: [0, 3, 5],
                     2: [0, 3, 6],
@@ -67,8 +71,17 @@ def get_line(x1, y1, x2, y2):
 
 
 def point_in_canvas(pos):
-    """
-    如果点在图片内，返回true
+    """Determines if a point is within the bounds of a canvas.
+
+    This function checks whether the given point lies within a specific rectangular area (the canvas).
+    The canvas is assumed to have dimensions 360x720.
+
+    Args:
+        pos (tuple): A tuple representing the (x, y) coordinates of the point.
+
+    Returns:
+        bool: True if the point is within the canvas, False otherwise.
+
     """
     if (pos[0] >= 0) and (pos[0] < 360) and (pos[1] >= 0) and (pos[1] < 720):
         return True

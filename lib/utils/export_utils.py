@@ -1,6 +1,5 @@
 """
 This file contains all the methods responsible for saving the generated data in the correct output format.
-
 """
 
 import numpy as np
@@ -49,18 +48,65 @@ def save_ref_files(OUTPUT_FOLDER, id):
             f.write("{0:06}".format(id) + '\n')
 
 def save_rgb_image(filename, image):
+    """Saves an RGB image to disk.
+
+    This function converts a numpy array to an image and saves it to the specified filename.
+
+    Args:
+        filename (str): The path and filename where the image will be saved.
+        image (np.array): The image data in numpy array format to be saved.
+
+    Note:
+        The image format is inferred from the filename extension.
+
+    """
     im = Image.fromarray(image)
     im.save(filename)
 
 def save_image_data(filename, image):
+    """Saves image data directly to disk.
+
+    This function is typically used for saving raw sensor data from the simulation environment.
+
+    Args:
+        filename (str): The path and filename where the image will be saved.
+        image (carla.Image): The CARLA image data to be saved.
+
+    """
     image.save_to_disk(filename)
 
 def save_depth_data(filename, image):
+    """Saves depth image data to disk using a logarithmic depth color converter.
+
+    Converts the depth image data to a format that is visually interpretable and saves it to the specified file. 
+    The logarithmic depth color converter is used to enhance the visual quality of depth images.
+
+    Args:
+        filename (str): The path where the depth image will be saved.
+        image (carla.Image): The depth image data retrieved from a CARLA sensor.
+
+    Note:
+        The CARLA image is expected to have a 'save_to_disk' method, and the color converter used is set to LogarithmicDepth.
+
+    """
     # cc = carla.ColorConverter.Depth
     cc = carla.ColorConverter.LogarithmicDepth
     image.save_to_disk(filename, cc)
 
 def save_npc_data(filename, actors, ego_vehicle):
+    """Saves the data of non-player character (NPC) vehicles to a file.
+
+    This function iterates through all actors, filtering out the ego vehicle, and saves the type and pose of each NPC vehicle.
+
+    Args:
+        filename (str): The path of the file where the NPC data will be saved.
+        actors (list of carla.Actor): The list of actors (NPC vehicles and pedestrians) in the simulation.
+        ego_vehicle (carla.Vehicle): The player-controlled vehicle (to be excluded from the NPC data).
+
+    Note:
+        The data saved for each NPC includes its type identifier and its 3D pose (location and rotation).
+
+    """
     npc_list = []
     for npc in actors:
         if npc.id != ego_vehicle.id:
@@ -73,6 +119,21 @@ def save_npc_data(filename, actors, ego_vehicle):
             f.write(npc_data)
 
 def save_ego_vehicle_trajectory(filename, ego_vehicle):
+    """Adds a point to a PLY file representing a 3D trajectory.
+
+    This function opens (or creates if not existing) a PLY file and appends a new vertex representing a point in 3D space.
+
+    Args:
+        filename (str): The path of the PLY file.
+        ego_vehicle (carla.Vehicle): The player-controlled vehicle.
+        x (float): The x-coordinate of the point.
+        y (float): The y-coordinate of the point.
+        z (float): The z-coordinate of the point.
+
+    Note:
+        If the file does not exist, it creates a new PLY file with the appropriate headers. Otherwise, it appends the point to the existing file.
+
+    """
     transform = ego_vehicle.get_transform()
     data = f"Vehicle_Transform: {transform.location.x} {transform.location.y} {transform.location.z} {transform.rotation.pitch} {transform.rotation.yaw} {transform.rotation.roll}\n"
     with open(filename, 'a') as f:
@@ -106,25 +167,31 @@ def save_ego_vehicle_trajectory(filename, ego_vehicle):
 
 
 def save_lidar_data(filename, point_cloud, format="bin"):
-    """ Saves lidar data to given filename, according to the lidar data format.
-        bin is used for KITTI-data format, while .ply is the regular point cloud format
-        In Unreal, the coordinate system of the engine is defined as, which is the same as the lidar points
-        z              
-        ^   ^ x
-        |  /
-        | /
-        |/____> y
-              z
-              ^   ^ x
-              |  /
-              | /
-        y<____|/
-        Which is a right handed coordinate sylstem
-        Therefore, we need to flip the y axis of the lidar in order to get the correct lidar format for kitti.
-        This corresponds to the following changes from Carla to Kitti
-            Carla: X   Y   Z
-            KITTI: X  -Y   Z
-        NOTE: We do not flip the coordinate system when saving to .ply.
+    """
+    Saves LiDAR data to a file in either binary or PLY format.
+
+    This function processes the raw LiDAR data and saves it to a specified file. The binary format is compatible with KITTI data format, 
+    while the PLY format is a standard point cloud format. 
+
+    In the Unreal Engine, which CARLA uses, the coordinate system is right-handed. For compatibility with the KITTI dataset, 
+    the y-axis of the LiDAR data is negated. 
+
+    Args:
+        filename (str): The path where the LiDAR data will be saved.
+        point_cloud (carla.LidarMeasurement): The raw LiDAR data from a CARLA sensor.
+        format (str, optional): The format to save the LiDAR data in ('bin' for KITTI binary format, 'ply' for PLY format). 
+                                Defaults to 'bin'.
+
+    Coordinate System:
+        Unreal Engine (CARLA): X, Y, Z
+        KITTI: X, -Y, Z
+        The conversion is applied to match the KITTI format when saving in binary format.
+        z                      z              
+        ^   ^ x                ^   ^ x
+        |  /        -->        |  /
+        | /                    | /
+        |/____> y        y<____|/
+
     """
 
     point_cloud = np.copy(np.frombuffer(point_cloud.raw_data, dtype=np.dtype('f4')))
@@ -135,16 +202,16 @@ def save_lidar_data(filename, point_cloud, format="bin"):
     # what we see in Unreal since Open3D uses a right-handed coordinate system
     points[:, 1] = -points[:, 1]
 
+    intensity_col = 1.0 - np.log(intensity) / np.log(np.exp(-0.004 * 100))
+    int_color = np.c_[
+        np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 0]),
+        np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 1]),
+        np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 2])]
+
     if format == "bin":
-        lidar_array = np.array(point_cloud).astype(np.float32)
+        lidar_array = np.array(np.concatenate((points, int_color), axis=1)).astype(np.float32)
         lidar_array.tofile(filename)
     elif format == "ply":
-        intensity_col = 1.0 - np.log(intensity) / np.log(np.exp(-0.004 * 100))
-        int_color = np.c_[
-            np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 0]),
-            np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 1]),
-            np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 2])]
-
         # # An example of converting points from sensor to vehicle space if we had
         # # a carla.Transform variable named "tran":
         # points = np.append(points, np.ones((points.shape[0], 1)), axis=1)
@@ -155,9 +222,7 @@ def save_lidar_data(filename, point_cloud, format="bin"):
         point_list.points = o3d.utility.Vector3dVector(points)
         point_list.colors = o3d.utility.Vector3dVector(int_color)
 
-        # Save the PointCloud as a PLY file
         o3d.io.write_point_cloud(filename, point_list)
-
 
 def save_label_data(filename, datapoints):
     with open(filename, 'w') as f:
@@ -265,13 +330,21 @@ def save_calibration_data(filename, intrinsic_list, extrinsic_inv_list):
         write_flat(f, "Tr", TR_velodyne)
 
 def save_pose_data(filename, lidar):
-    """saves the pose of the lidar in the world coordinate system to a file.
+    """Saves the pose of the LiDAR sensor in the world coordinate system to a file.
+
+    This function extracts the LiDAR's transformation matrix relative to the world coordinate system,
+    adjusts the rotation matrix to align with a specified format, and saves the pose data to a text file.
 
     Args:
-        filename (): 
-        lidar (): 
+        filename (str): The path of the file where the pose data will be appended.
+        lidar (carla.Lidar): The LiDAR sensor object from which pose data is extracted.
+
+    Details:
+        The transformation matrix is a 4x4 matrix representing the LiDAR's position and orientation in the world.
+        The rotation matrix is adjusted to align with the world coordinate system used in the simulation environment.
+        The final pose data includes both rotation and translation components of the LiDAR sensor.
+
     """
-    # 4*4 lidar to world matrix
     l2w = np.mat(lidar.get_transform().get_matrix())
 
     rotation = l2w[:3, :3]
