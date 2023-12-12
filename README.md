@@ -60,7 +60,7 @@ python generator.py --cfg_file ./configs/kitti/3d-lidar.yaml
 | :-:   | :-:   |
 | ![](./assets/lidar.png) | ![](./assets/nksr.png) |
 
-You can reproduce the result from above image by following command line. More details and environment setup, please find from [NKSR](https://github.com/nv-tlabs/NKSR) repository.
+You can reproduce the result from above image by following command. More details and environment setup, please found from [NKSR](https://github.com/nv-tlabs/NKSR) repository.
 ```
 python scripts/recon_nksr.py
 ```
