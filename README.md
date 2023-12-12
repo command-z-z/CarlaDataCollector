@@ -90,7 +90,7 @@ git clone https://github.com/command-z-z/CARLA-KITTI.git
 2. Create client and collector customized for your own tasks:
 
 <details>
-<summary><b>Customized SynchronyClient</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
+<summary><b>Customized Client</b> <span style="font-size:14px;">(Click to expend) </span> </summary>
 
 Inherit the function from `BasicClient` and overload the `tick` function according to your own data collection requirements.
 ```python
