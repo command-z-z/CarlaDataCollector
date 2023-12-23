@@ -25,12 +25,12 @@ class Client(BasicClient):
         assert all(x.frame == self.frame for x in data)
 
         sensors = self.actors["sensors"][ego_vehicle]
-        sensor_intrinsic = [get_camera_intrinsic(int(sensor.attributes['image_size_x']), int(sensor.attributes['image_size_y']), int(sensor.attributes['fov'])) for sensor in sensors[:5]]
+        sensor_intrinsic = [get_camera_intrinsic(int(sensor.attributes['image_size_x']), int(sensor.attributes['image_size_y']), int(sensor.attributes['fov'])) for sensor in sensors[:8]]
         sensor_extrinsic = [np.mat(sensor.get_transform().get_matrix()) for sensor in sensors]
 
         ret["sensors_data"][ego_vehicle] = {}
         ret["sensors_data"][ego_vehicle]["sensor_data"] = data
         ret["sensors_data"][ego_vehicle]["intrinsic"] = sensor_intrinsic
         ret["sensors_data"][ego_vehicle]["extrinsic_inv"] = sensor_extrinsic
-        ret["sensors_data"][ego_vehicle]["lidar"] = sensors[5]
+        ret["sensors_data"][ego_vehicle]["lidar"] = sensors[8]
         return ret

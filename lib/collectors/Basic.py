@@ -43,7 +43,7 @@ class BasicDataCollector:
             int: The frame number from which data collection will commence.
 
         """
-        image_path = os.path.join(self.OUTPUT_FOLDER, 'image/')
+        image_path = os.path.join(self.OUTPUT_FOLDER, 'rgb/')
         if not os.path.exists(image_path):
             return 0
         num_existing_data_files = len(

@@ -75,7 +75,7 @@ def save_image_data(filename, image):
     """
     image.save_to_disk(filename)
 
-def save_depth_data(filename, image):
+def save_depth_data(filename, image, type=None):
     """Saves depth image data to disk using a logarithmic depth color converter.
 
     Converts the depth image data to a format that is visually interpretable and saves it to the specified file. 
@@ -87,11 +87,17 @@ def save_depth_data(filename, image):
 
     Note:
         The CARLA image is expected to have a 'save_to_disk' method, and the color converter used is set to LogarithmicDepth.
+        The Depth or LogarithmicDepth color converter will loss the precision of the depth data. 
 
     """
-    # cc = carla.ColorConverter.Depth
-    cc = carla.ColorConverter.LogarithmicDepth
-    image.save_to_disk(filename, cc)
+    if type is None:
+        image.save_to_disk(filename)
+    elif type == "Depth":
+        cc = carla.ColorConverter.Depth
+        image.save_to_disk(filename, cc)
+    elif type == "LogarithmicDepth":
+        cc = carla.ColorConverter.LogarithmicDepth
+        image.save_to_disk(filename, cc)
 
 def save_npc_data(filename, actors, ego_vehicle):
     """Saves the data of non-player character (NPC) vehicles to a file.
@@ -209,7 +215,7 @@ def save_lidar_data(filename, point_cloud, format="bin"):
         np.interp(intensity_col, VID_RANGE, VIRIDIS[:, 2])]
 
     if format == "bin":
-        lidar_array = np.array(np.concatenate((points, int_color), axis=1)).astype(np.float32)
+        lidar_array = np.array(point_cloud).astype(np.float32)
         lidar_array.tofile(filename)
     elif format == "ply":
         # # An example of converting points from sensor to vehicle space if we had
@@ -329,7 +335,50 @@ def save_calibration_data(filename, intrinsic_list, extrinsic_inv_list):
             write_flat(f, "P" + str(i), p[i])
         write_flat(f, "Tr", TR_velodyne)
 
-def save_pose_data(filename, lidar):
+def save_camera_matrix_data(filename, data, data_type='intrinsics'):
+    """New we must change from an "standard" camera coordinate 
+    system (the same used by OpenCV) to UE4's coordinate system:
+
+       . z                ^ z                         ^ z         
+      /                   |                           |  
+     +-------> x    to    |             to            |       
+     |                    | . x                       | . x                
+     |                    |/                          |/                   
+     v y                  +-------> y       y <-------+           
+
+    This can be achieved by multiplying by the following matrix:
+    [[ 0,  0,  1 ],
+     [ 1,  0,  0 ],
+     [ 0, -1,  0 ]]
+
+    Args:
+        filename (): 
+        data (): 
+        data_type (): 
+
+    Raises:
+        ValueError: 
+    """
+    if data_type == 'intrinsics':
+        data = np.array(data).flatten()
+
+    elif data_type == 'extrinsics_inv':
+        c2w = data
+        rotation = c2w[:3, :3]
+        translation = c2w[:3, 3]
+        adjusted_rotation = np.dot(rotation, np.array([[0, 0, 1], [1, 0, 0], [0, -1, 0]]))
+        adjusted_c2w = np.column_stack((adjusted_rotation, translation))
+        adjusted_c2w = np.dot(np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]), adjusted_c2w)
+        data = np.array(adjusted_c2w).flatten()
+
+    else:
+        raise ValueError('Unknown data type: %s' % data_type)
+
+    with open(filename, 'a') as f:
+        f.write(" ".join(map(str,[r for r in data])))
+        f.write("\n")
+
+def save_lidar_l2w_data(filename, lidar):
     """Saves the pose of the LiDAR sensor in the world coordinate system to a file.
 
     This function extracts the LiDAR's transformation matrix relative to the world coordinate system,
@@ -344,6 +393,15 @@ def save_pose_data(filename, lidar):
         The rotation matrix is adjusted to align with the world coordinate system used in the simulation environment.
         The final pose data includes both rotation and translation components of the LiDAR sensor.
 
+    Coordinate System:
+        Unreal Engine (CARLA): X, Y, Z
+        KITTI: X, -Y, Z
+        The conversion is applied to match the KITTI format when saving in binary format.
+             z                    z                             z        
+             ^   ^ x              ^   ^ x                       ^   ^ x  
+             |  /       -->       |  /          -->             |  /     
+             | /                  | /                           | /      
+       y<____|/                   |/____> y               y<____|/
     """
     l2w = np.mat(lidar.get_transform().get_matrix())
 
@@ -352,6 +410,7 @@ def save_pose_data(filename, lidar):
 
     adjusted_rotation = np.dot(rotation, np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]))
     adjusted_l2w = np.column_stack((adjusted_rotation, translation))
+    adjusted_l2w = np.dot(np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]]), adjusted_l2w)
     data = np.array(adjusted_l2w).flatten()
 
     with open(filename, 'a') as f:

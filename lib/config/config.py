@@ -19,6 +19,8 @@ def parse_cfg(cfg, args):
     cfg.record_dir = os.path.abspath(os.path.join(cfg.record_dir, cfg.task, cfg.exp_name, cfg.map))
     cfg.result_dir = os.path.abspath(os.path.join(cfg.result_dir, cfg.task, cfg.exp_name, cfg.map))
     cfg.seed = args.seed
+    if args.output is not None:
+        cfg.result_dir = os.path.abspath(os.path.join(args.output, f"{cfg.map}_{cfg.seed:04d}/renderings"))
     if not os.path.exists(cfg.record_dir):
         os.makedirs(cfg.record_dir)
     if not os.path.exists(cfg.result_dir):
@@ -44,6 +46,7 @@ def make_cfg(args):
 parser = argparse.ArgumentParser()
 parser.add_argument("--cfg_file", default="configs/base.yaml", type=str)
 parser.add_argument('--seed', help='Set seed for repeating executions (default: None)', type=int, default=None)
+parser.add_argument('--output', help='path for dataset output', type=str, default=None)
 args = parser.parse_args()
 
 cfg = make_cfg(args)

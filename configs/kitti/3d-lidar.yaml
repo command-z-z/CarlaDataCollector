@@ -1,12 +1,15 @@
-parent_cfg: 'configs/basic.yaml'
+# parent_cfg: 'configs/basic.yaml'
 task: KITTI
 exp_name: '3d-lidar'
-map: 'Town03'
+map: 'Town05'
 
 collector_module: lib.collectors.KITTI.KITTILidar
 client_module: lib.clients.KITTI.KITTILidar
 
 carla:
+    client:
+        host: 'localhost'
+        port: 2000
     weather: ClearNoon
     fixed_delta_seconds: 0.05
     num_of_npc_vehicles: 30
@@ -18,14 +21,34 @@ ego_vehicle:
     ignore_signs_percentage: 100.0
     ignore_vehicles_percentage: 0.0
     ignore_walkers_percentage: 0.0
-    vehicle_percentage_speed_difference: 0.0
+    vehicle_percentage_speed_difference: 30.0
 
+# attach ego_vehicle
+spectator:
+    transform: {location: [0, 0, 20], rotation: [-90, 0, 0]}
+
+traffic_manager: 
+    port: 8000
+    global_distance_to_leading_vehicle: 2.5 
+    global_percentage_speed_difference: 30.0
+    
 sensors:
-    rgb:
+    rgb_1:
+        transform: {location: [0, 0, 1.8], rotation: [0, -90, 0]}
+        blueprint: sensor.camera.rgb
+        attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
+    rgb_2:
         transform: {location: [0, 0, 1.8], rotation: [0, 0, 0]}
         blueprint: sensor.camera.rgb
         attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
-
+    rgb_3:
+        transform: {location: [0, 0, 1.8], rotation: [0, 90, 0]}
+        blueprint: sensor.camera.rgb
+        attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
+    rgb_4:
+        transform: {location: [0, 0, 1.8], rotation: [0, 180, 0]}
+        blueprint: sensor.camera.rgb
+        attribute: {image_size_x: 720, image_size_y: 360, fov: 90}
     depth_1:
         transform: { location: [ 0, 0, 1.8 ], rotation: [ 0, -90, 0 ] }
         blueprint: sensor.camera.depth
