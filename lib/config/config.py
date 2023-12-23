@@ -16,9 +16,16 @@ def parse_cfg(cfg, args):
         raise ValueError('task must be specified')
 
     print('EXP NAME: ', cfg.exp_name)
+    if args.seed is not None:
+        cfg.seed = args.seed
+    if args.map is not None:
+        cfg.map = args.map
+    if args.num_vehicles is not None:
+        cfg.carla.num_of_npc_vehicles = args.num_vehicles
+    if args.frame is not None:
+        cfg.all_frame_iter = args.frame
     cfg.record_dir = os.path.abspath(os.path.join(cfg.record_dir, cfg.task, cfg.exp_name, cfg.map))
     cfg.result_dir = os.path.abspath(os.path.join(cfg.result_dir, cfg.task, cfg.exp_name, cfg.map))
-    cfg.seed = args.seed
     if args.output is not None:
         cfg.result_dir = os.path.abspath(os.path.join(args.output, f"{cfg.map}_{cfg.seed:04d}/renderings"))
     if not os.path.exists(cfg.record_dir):
@@ -44,9 +51,12 @@ def make_cfg(args):
     return cfg_
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--cfg_file", default="configs/base.yaml", type=str)
+parser.add_argument("--cfg_file", default="configs/basic.yaml", type=str)
 parser.add_argument('--seed', help='Set seed for repeating executions (default: None)', type=int, default=None)
 parser.add_argument('--output', help='path for dataset output', type=str, default=None)
+parser.add_argument('--map', help='map for data collocte', type=str, default=None)
+parser.add_argument('--num_vehicles', help='the number of npc vehicle', type=int, default=None)
+parser.add_argument('--frame', help='the number of frame', type=int, default=None)
 args = parser.parse_args()
 
 cfg = make_cfg(args)
