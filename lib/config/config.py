@@ -27,7 +27,7 @@ def parse_cfg(cfg, args):
     cfg.record_dir = os.path.abspath(os.path.join(cfg.record_dir, cfg.task, cfg.exp_name, cfg.map))
     cfg.result_dir = os.path.abspath(os.path.join(cfg.result_dir, cfg.task, cfg.exp_name, cfg.map))
     if args.output is not None:
-        cfg.result_dir = os.path.abspath(os.path.join(args.output, f"{cfg.map}_{cfg.seed:04d}/renderings"))
+        cfg.result_dir = os.path.abspath(os.path.join(args.output, f"{cfg.map}_{cfg.carla.num_of_npc_vehicles:04d}_{cfg.seed:04d}/renderings"))
     if not os.path.exists(cfg.record_dir):
         os.makedirs(cfg.record_dir)
     if not os.path.exists(cfg.result_dir):
