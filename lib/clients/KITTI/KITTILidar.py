@@ -32,5 +32,6 @@ class Client(BasicClient):
         ret["sensors_data"][ego_vehicle]["sensor_data"] = data
         ret["sensors_data"][ego_vehicle]["intrinsic"] = sensor_intrinsic
         ret["sensors_data"][ego_vehicle]["extrinsic_inv"] = sensor_extrinsic
-        ret["sensors_data"][ego_vehicle]["lidar"] = sensors[8]
+        ret["sensors_data"][ego_vehicle]["lidar_256"] = sensors[8]
+        ret["sensors_data"][ego_vehicle]["lidar_32"] = sensors[9]
         return ret
